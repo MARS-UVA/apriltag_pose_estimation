@@ -8,5 +8,10 @@ setup(
     license='',
     author='MARS @ UVA',
     author_email='',
-    description='A Python library for estimating the camera_pose of AprilTags.'
+    description='A Python library for estimating the pose of AprilTags.',
+    install_requires=[
+        'numpy',
+        'opencv-python',
+        'pupil-apriltags'
+    ]
 )

@@ -50,7 +50,8 @@ def main() -> None:
                       f'{np.linalg.norm(estimate.tag_pose.translation_vector.T)} m')
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
             overlay_writer = OverlayWriter(image, estimates, LOGITECH_CAM_PARAMETERS, tag_size=0.150)
-            overlay_writer.overlay_axes()
+            overlay_writer.overlay_label()
+            overlay_writer.overlay_cube()
         cv2.imshow('Capture', image)
         key = cv2.waitKey(20)
         if key == 27:
