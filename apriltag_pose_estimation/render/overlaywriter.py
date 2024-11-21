@@ -93,6 +93,9 @@ class OverlayWriter:
     def overlay_axes(self,
                      axis_length: float = 1,
                      thickness: int = 2,
+                     invert_x: bool = False,
+                     invert_y: bool = False,
+                     invert_z: bool = False,
                      x_color: Color = RED,
                      y_color: Color = GREEN,
                      z_color: Color = BLUE) -> None:
@@ -100,15 +103,18 @@ class OverlayWriter:
         Overlay the axes corresponding to each detected AprilTag on the image.
         :param axis_length: The length of each axis as a proportion of the tag size.
         :param thickness: The thickness of the lines for the axes (default: 2).
+        :param invert_x: Whether to invert the x-axis (default: False).
+        :param invert_y: Whether to invert the y-axis (default: False).
+        :param invert_z: Whether to invert the z-axis (default: False).
         :param x_color: The color with which to draw the x-axis (default: red).
         :param y_color: The color with which to draw the y-axis (default: green).
         :param z_color: The color with which to draw the z-axis (default: blue).
         """
         object_points = np.array([[
             [0, 0, 0],
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1],
+            [-1 if invert_x else 1, 0, 0],
+            [0, -1 if invert_y else 1, 0],
+            [0, 0, -1 if invert_z else 1],
         ]], dtype=np.float64) * self.__tag_size * axis_length
         for detection in self.__detections:
             projected_points = self.__project(object_points, detection)
