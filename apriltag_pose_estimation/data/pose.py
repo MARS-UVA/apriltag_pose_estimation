@@ -9,7 +9,7 @@ import numpy.typing as npt
 @dataclass(frozen=True)
 class Pose:
     """
-    An object representing the camera_pose of an object in 3D Euclidean space (an element of SE(3)).
+    An object representing the pose of an object in 3D Euclidean space (an element of SE(3)).
     """
     rotation_matrix: npt.NDArray[np.float64]
     """A 3x3 float64 matrix which is the rotation component of the pose."""

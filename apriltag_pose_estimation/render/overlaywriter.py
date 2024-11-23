@@ -91,7 +91,7 @@ class OverlayWriter:
                         color.bgr(), thickness, cv2.LINE_AA)
 
     def overlay_axes(self,
-                     axis_length: float = 1,
+                     axis_length: float = 0.5,
                      thickness: int = 2,
                      invert_x: bool = False,
                      invert_y: bool = False,
@@ -101,7 +101,7 @@ class OverlayWriter:
                      z_color: Color = BLUE) -> None:
         """
         Overlay the axes corresponding to each detected AprilTag on the image.
-        :param axis_length: The length of each axis as a proportion of the tag size.
+        :param axis_length: The length of each axis as a proportion of the tag size (default: 0.5).
         :param thickness: The thickness of the lines for the axes (default: 2).
         :param invert_x: Whether to invert the x-axis (default: False).
         :param invert_y: Whether to invert the y-axis (default: False).
@@ -118,9 +118,9 @@ class OverlayWriter:
         ]], dtype=np.float64) * self.__tag_size * axis_length
         for detection in self.__detections:
             projected_points = self.__project(object_points, detection)
+            cv2.line(self.__image, projected_points[0], projected_points[3], color=z_color.bgr(), thickness=thickness)
             cv2.line(self.__image, projected_points[0], projected_points[1], color=x_color.bgr(), thickness=thickness)
             cv2.line(self.__image, projected_points[0], projected_points[2], color=y_color.bgr(), thickness=thickness)
-            cv2.line(self.__image, projected_points[0], projected_points[3], color=z_color.bgr(), thickness=thickness)
 
     def overlay_cube(self, color: Color = RED) -> None:
         """
@@ -159,8 +159,8 @@ class OverlayWriter:
 
     def __project(self, object_points: npt.NDArray[np.float64], detection: AprilTagDetection):
         projected_points, _ = cv2.projectPoints(object_points,
-                                                detection.camera_pose.rotation_vector,
-                                                detection.camera_pose.translation_vector,
+                                                detection.tag_pose.rotation_vector,
+                                                detection.tag_pose.translation_vector,
                                                 self.__camera_params.get_matrix(),
                                                 self.__camera_params.get_distortion_vector())
         projected_points = np.round(projected_points).astype(int).reshape((-1, 2))

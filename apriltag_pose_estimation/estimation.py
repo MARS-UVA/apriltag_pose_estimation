@@ -85,18 +85,18 @@ class AprilTagDetection:
     """A measure of the quality of the binary decoding process. Higher numbers roughly indicate better decodes."""
     hamming: int
     """The number of error bits which were corrected."""
-    camera_pose: Pose
+    tag_pose: Pose
     """
-    The pose of the camera in the tag's coordinate frame.
+    The pose of the tag in the camera's coordinate frame.
     
     This should not be confused with the pose of the tag in the camera's coordinate frame. The reason why this is
     computed instead is because it simplifies calculations.
     """
 
     @property
-    def tag_pose(self) -> Pose:
-        """The pose of the tag in the camera's coordinate frame."""
-        return Pose.from_matrix(np.linalg.inv(self.camera_pose.get_matrix()))
+    def camera_pose(self) -> Pose:
+        """The pose of the camera in the tag's coordinate frame."""
+        return Pose.from_matrix(np.linalg.inv(self.tag_pose.get_matrix()))
 
 
 class AprilTagPoseEstimationStrategy(abc.ABC):

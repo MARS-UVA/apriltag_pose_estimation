@@ -72,7 +72,7 @@ class PerspectiveNPointStrategy(AprilTagPoseEstimationStrategy):
                                   corners=detection.corners,
                                   decision_margin=detection.decision_margin,
                                   hamming=detection.hamming,
-                                  camera_pose=self.__get_pose_from_corners(detection, camera_params, tag_size))
+                                  tag_pose=self.__get_pose_from_corners(detection, camera_params, tag_size))
                 for detection in detector.detect(image)]
 
     def __get_pose_from_corners(self,
