@@ -85,18 +85,17 @@ class AprilTagDetection:
     """A measure of the quality of the binary decoding process. Higher numbers roughly indicate better decodes."""
     hamming: int
     """The number of error bits which were corrected."""
-    tag_pose: Pose
-    """
-    The pose of the tag in the camera's coordinate frame.
-    
-    This should not be confused with the pose of the tag in the camera's coordinate frame. The reason why this is
-    computed instead is because it simplifies calculations.
-    """
+    tag_poses: List[Pose]
+    """Possible poses of the tag in the camera's coordinate frame, in order from best to worst."""
+
+    def __post_init__(self):
+        if not self.tag_poses:
+            raise ValueError('tag_poses is empty')
 
     @property
-    def camera_pose(self) -> Pose:
-        """The pose of the camera in the tag's coordinate frame."""
-        return Pose.from_matrix(np.linalg.inv(self.tag_pose.get_matrix()))
+    def best_tag_pose(self) -> Pose:
+        """The best tag pose calculated."""
+        return self.tag_poses[0]
 
 
 class AprilTagPoseEstimationStrategy(abc.ABC):

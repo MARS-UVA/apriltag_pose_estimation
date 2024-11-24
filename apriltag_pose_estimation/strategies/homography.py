@@ -43,9 +43,9 @@ class HomographyOrthogonalIterationStrategy(AprilTagPoseEstimationStrategy):
                                   corners=detection.corners,
                                   decision_margin=detection.decision_margin,
                                   hamming=detection.hamming,
-                                  tag_pose=Pose(rotation_matrix=detection.pose_R,
-                                                translation_vector=detection.pose_t,
-                                                error=detection.pose_err))
+                                  tag_poses=[Pose(rotation_matrix=detection.pose_R,
+                                                  translation_vector=detection.pose_t,
+                                                  error=detection.pose_err)])
                 for detection in detector.detect(img=image,
                                                  estimate_tag_pose=True,
                                                  camera_params=(camera_params.fx,
