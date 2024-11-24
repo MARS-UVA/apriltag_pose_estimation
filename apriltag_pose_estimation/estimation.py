@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 from pupil_apriltags import Detector
 
-from .data.pose import Pose
+from .pose import Pose
 
 
 __all__ = ['CameraParameters', 'AprilTagDetection', 'AprilTagPoseEstimationStrategy', 'EstimationError']

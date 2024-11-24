@@ -6,7 +6,8 @@ import numpy as np
 import numpy.typing as npt
 from pupil_apriltags import Detector, Detection
 
-from ..estimation import AprilTagPoseEstimationStrategy, CameraParameters, AprilTagDetection, Pose, EstimationError
+from ..estimation import AprilTagPoseEstimationStrategy, CameraParameters, AprilTagDetection, EstimationError
+from ..pose import Pose
 
 
 __all__ = ['PerspectiveNPointStrategy', 'PnPMethod']

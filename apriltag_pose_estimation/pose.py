@@ -17,7 +17,7 @@ class Pose:
     """A float64 vector which is the translation component of the pose."""
 
     error: Optional[float] = None
-    """An error associated with the camera_pose, if any."""
+    """An error associated with the pose, if any."""
 
     def __post_init__(self):
         if self.rotation_matrix.shape != (3, 3):
