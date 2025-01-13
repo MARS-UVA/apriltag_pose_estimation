@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 from pupil_apriltags import Detector
 
-from .pose import Pose
+from .euclidean import Pose
 
 
 __all__ = ['CameraParameters', 'AprilTagDetection', 'AprilTagPoseEstimationStrategy', 'EstimationError']
@@ -99,7 +99,7 @@ class AprilTagDetection:
 
 
 class AprilTagPoseEstimationStrategy(abc.ABC):
-    """A strategy for pose estimation of AprilTag tags"""
+    """A strategy for pose estimation of AprilTag tags."""
     @abc.abstractmethod
     def estimate_tag_pose(self,
                           image: npt.NDArray[np.uint8],
@@ -115,4 +115,9 @@ class AprilTagPoseEstimationStrategy(abc.ABC):
         :return: A list of all AprilTags which were detected. If there were no AprilTags detected, an empty list is
                  returned.
         """
+        pass
+
+    @property
+    @abc.abstractmethod
+    def name(self):
         pass

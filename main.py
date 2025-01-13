@@ -171,6 +171,7 @@ def processor_process(poses_queue: mp.Queue,
                 not_closed, frame = capture.read()
                 image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 if estimates := estimator.estimate_tag_pose(image):
+                    print(estimates[0].best_tag_pose.get_matrix())
                     image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
                     overlay_writer = OverlayWriter(image, estimates, camera_params, tag_size=tag_size)
                     overlay_writer.overlay_cubes()
@@ -194,7 +195,7 @@ def main(frame_delay: int = 20) -> None:
     processes = [mp.Process(target=processor_process,
                             args=(poses_queue,
                                   frame_delay,
-                                  PerspectiveNPointStrategy(PnPMethod.AP3P),
+                                  PerspectiveNPointStrategy(PnPMethod.IPPE),
                                   0.150,
                                   DEPSTECH_CAM_PARAMETERS),
                             kwargs=dict(families='tagStandard41h12',

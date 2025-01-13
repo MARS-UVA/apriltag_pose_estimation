@@ -8,7 +8,7 @@ import numpy.typing as npt
 from pupil_apriltags import Detector, Detection
 
 from ..estimation import AprilTagPoseEstimationStrategy, CameraParameters, AprilTagDetection, EstimationError
-from ..pose import Pose
+from ..euclidean import Pose
 
 
 __all__ = ['PerspectiveNPointStrategy', 'PnPMethod']
@@ -76,6 +76,10 @@ class PerspectiveNPointStrategy(AprilTagPoseEstimationStrategy):
                                   hamming=detection.hamming,
                                   tag_poses=self.__get_poses_from_corners(detection, camera_params, tag_size))
                 for detection in detector.detect(image)]
+
+    @property
+    def name(self):
+        return f'pnp-{self.__method.name.lower()}'
 
     def __get_poses_from_corners(self,
                                  detection: Detection,

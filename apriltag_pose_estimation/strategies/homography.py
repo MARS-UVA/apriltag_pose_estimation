@@ -5,7 +5,7 @@ import numpy.typing as npt
 from pupil_apriltags import Detector, Detection
 
 from ..estimation import AprilTagPoseEstimationStrategy, CameraParameters, AprilTagDetection
-from ..pose import Pose
+from ..euclidean import Pose
 
 
 __all__ = ['HomographyOrthogonalIterationStrategy']
@@ -53,3 +53,7 @@ class HomographyOrthogonalIterationStrategy(AprilTagPoseEstimationStrategy):
                                                                 camera_params.cx,
                                                                 camera_params.cy),
                                                  tag_size=tag_size)]
+
+    @property
+    def name(self):
+        return 'homography'
