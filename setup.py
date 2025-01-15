@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='apriltag_pose_estimation',
-    version='0.0.1',
+    version='0.1.0',
     packages=['apriltag_pose_estimation'],
     url='',
     license='',
