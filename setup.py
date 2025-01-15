@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'numpy',
         'opencv-python',
-        'pupil-apriltags'
+        'pupil-apriltags',
+        'scipy'
     ]
 )
