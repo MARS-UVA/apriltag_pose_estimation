@@ -6,8 +6,8 @@ import numpy.typing as npt
 from pupil_apriltags import Detector, Detection
 
 from ..estimation import AprilTagPoseEstimationStrategy
-from ...core.detection import AprilTagDetection
 from ...core.camera import CameraParameters
+from ...core.detection import AprilTagDetection
 from ...core.euclidean import Pose
 from ...core.pnp import PnPMethod, solve_pnp
 

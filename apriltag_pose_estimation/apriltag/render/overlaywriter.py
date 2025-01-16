@@ -7,10 +7,10 @@ import cv2
 import numpy as np
 import numpy.typing as npt
 
+from .color import Color, RED, GREEN, BLUE
 from ...core.euclidean import Pose
 from ...core.detection import AprilTagDetection
 from ...core.camera import CameraParameters
-from .color import Color, RED, GREEN, BLUE
 
 
 __all__ = ['Font', 'OverlayWriter']

@@ -10,6 +10,9 @@ from .camera import CameraParameters
 from .exceptions import EstimationError
 
 
+__all__ = ['PnPMethod', 'solve_pnp']
+
+
 class PnPMethod(IntEnum):
     """A method for solving the Perspective-N-Point problem."""
     ITERATIVE = cv2.SOLVEPNP_ITERATIVE

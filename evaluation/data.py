@@ -3,9 +3,8 @@ from dataclasses import asdict
 import numpy as np
 import pandas as pd
 
-from apriltag_pose_estimation import Pose, Twist
+from apriltag_pose_estimation.core import PnPMethod, Pose, Twist
 from apriltag_pose_estimation.apriltag.strategies import PerspectiveNPointStrategy
-from apriltag_pose_estimation.core.pnp import PnPMethod
 from evaluate import EvaluationCase, EvaluationRun, EvaluationResult, MultipleStrategyEvaluationResults
 
 

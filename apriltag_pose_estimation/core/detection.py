@@ -7,6 +7,9 @@ from numpy import typing as npt
 from .euclidean import Pose
 
 
+__all__ = ['AprilTagDetection']
+
+
 @dataclass(frozen=True)
 class AprilTagDetection:
     """A detection of an AprilTag."""
