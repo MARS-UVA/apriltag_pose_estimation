@@ -7,8 +7,9 @@ import cv2
 import numpy as np
 import numpy.typing as npt
 
-from ..euclidean import Pose
-from ..estimation import CameraParameters, AprilTagDetection
+from ...core.euclidean import Pose
+from ...core.detection import AprilTagDetection
+from ...core.camera import CameraParameters
 from .color import Color, RED, GREEN, BLUE
 
 

@@ -9,9 +9,8 @@ from typing import List, Tuple, Dict, TypeAlias, Any
 import numpy as np
 import numpy.typing as npt
 
-from apriltag_pose_estimation import AprilTagPoseEstimator, Pose, Twist, AprilTagPoseEstimationStrategy, \
-    CameraParameters
-
+from apriltag_pose_estimation import AprilTagPoseEstimator, Pose, Twist, AprilTagPoseEstimationStrategy
+from apriltag_pose_estimation.core.camera import CameraParameters
 
 logger = logging.getLogger(__name__)
 

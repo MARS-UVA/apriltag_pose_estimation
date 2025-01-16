@@ -4,8 +4,10 @@ import numpy as np
 import numpy.typing as npt
 from pupil_apriltags import Detector, Detection
 
-from ..estimation import AprilTagPoseEstimationStrategy, CameraParameters, AprilTagDetection
-from ..euclidean import Pose
+from ..estimation import AprilTagPoseEstimationStrategy
+from ...core.detection import AprilTagDetection
+from ...core.camera import CameraParameters
+from ...core.euclidean import Pose
 
 
 __all__ = ['HomographyOrthogonalIterationStrategy']

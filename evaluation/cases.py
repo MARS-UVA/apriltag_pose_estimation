@@ -9,9 +9,10 @@ import numpy as np
 import numpy.typing as npt
 from pupil_apriltags import Detector
 
-from apriltag_pose_estimation import Pose, CameraParameters, AprilTagPoseEstimationStrategy
-from apriltag_pose_estimation.strategies import (HomographyOrthogonalIterationStrategy, PerspectiveNPointStrategy,
-                                                 PnPMethod)
+from apriltag_pose_estimation import Pose, AprilTagPoseEstimationStrategy
+from apriltag_pose_estimation.core.camera import CameraParameters
+from apriltag_pose_estimation.apriltag.strategies import (HomographyOrthogonalIterationStrategy, PerspectiveNPointStrategy)
+from apriltag_pose_estimation.core.pnp import PnPMethod
 
 from data import EvaluationCase
 

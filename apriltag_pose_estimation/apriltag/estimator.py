@@ -4,8 +4,9 @@ import numpy as np
 import numpy.typing as npt
 from pupil_apriltags import Detector
 
-from .estimation import AprilTagPoseEstimationStrategy, CameraParameters, AprilTagDetection
-
+from .estimation import AprilTagPoseEstimationStrategy
+from ..core.detection import AprilTagDetection
+from ..core.camera import CameraParameters
 
 __all__ = ['AprilTagPoseEstimator']
 
