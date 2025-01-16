@@ -5,14 +5,17 @@ import numpy.typing as npt
 from pupil_apriltags import Detector
 
 from .estimation import RobotPoseEstimationStrategy
-from apriltag_pose_estimation.core.field import Field
-from apriltag_pose_estimation.core.detection import AprilTagDetection
-from apriltag_pose_estimation.core.euclidean import Pose
-from apriltag_pose_estimation.core.camera import CameraParameters
+from ..core.camera import CameraParameters
+from ..core.detection import AprilTagDetection
+from ..core.euclidean import Pose
+from ..core.field import AprilTagField
+
+
+__all__ = ['RobotPoseEstimator']
 
 
 class RobotPoseEstimator:
-    def __init__(self, strategy: RobotPoseEstimationStrategy, field: Field, camera_params: CameraParameters, camera_pose_on_robot: Pose, **detector_kwargs):
+    def __init__(self, strategy: RobotPoseEstimationStrategy, field: AprilTagField, camera_params: CameraParameters, camera_pose_on_robot: Pose, **detector_kwargs):
         self.__strategy = strategy
         self.__field = field
         self.__camera_params = camera_params
