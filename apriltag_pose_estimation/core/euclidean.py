@@ -31,29 +31,40 @@ class Pose:
             raise ValueError(f'expected shape (3, 1) for translation vector, got {self.translation_vector.shape}')
 
     @classmethod
-    def from_vectors(cls, rotation_vector: npt.NDArray[np.float64], translation_vector: npt.NDArray[np.float64]):
+    def from_vectors(cls,
+                     rotation_vector: npt.NDArray[np.float64],
+                     translation_vector: npt.NDArray[np.float64],
+                     error: Optional[float] = None) -> 'Pose':
         """
         Returns a new Pose object constructed from a rotation vector and translation vector.
         :param rotation_vector: A vector representing the rotation component of the pose in Euler angles, in order of
                                 [roll, pitch, yaw] in radians (shape must be either 3 or 3x1).
         :param translation_vector: A vector representing the translation component of the pose in order of
                                    [x, y, z] (shape must be either 3 or 3x1).
+        :param error: An error associated with the pose (optional).
         :return: A Pose created from the given vectors.
         """
         rotation_matrix, _ = cv2.Rodrigues(rotation_vector.astype(np.float64))
-        return cls(rotation_matrix=rotation_matrix, translation_vector=translation_vector.astype(np.float64).reshape(-1, 1))
+        return cls(rotation_matrix=rotation_matrix,
+                   translation_vector=translation_vector.astype(np.float64).reshape(-1, 1),
+                   error=error)
 
     @classmethod
-    def from_matrix(cls, matrix: npt.NDArray[np.float64]):
+    def from_matrix(cls,
+                    matrix: npt.NDArray[np.float64],
+                    error: Optional[float] = None):
         """
         Returns a new Pose object constructed from the given matrix representing an element of SE(3).
         :param matrix: The matrix, an element of SE(3).
+        :param error: An error associated with the pose (optional).
         :return: A new Pose object constructed from the given matrix.
         """
         if matrix.shape != (4, 4):
             raise ValueError(f'matrix must be shape (4, 4), got {matrix.shape}')
         matrix = matrix.astype(np.float64)
-        return cls(rotation_matrix=matrix[:3, :3], translation_vector=matrix[:3, 3].reshape(-1, 1))
+        return cls(rotation_matrix=matrix[:3, :3],
+                   translation_vector=matrix[:3, 3].reshape(-1, 1),
+                   error=error)
 
     @property
     def rotation_vector(self) -> npt.NDArray[np.float64]:

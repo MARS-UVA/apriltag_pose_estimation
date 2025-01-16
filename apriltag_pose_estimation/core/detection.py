@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Optional, List
 
 import numpy as np
 from numpy import typing as npt
@@ -16,20 +16,20 @@ class AprilTagDetection:
     """The family of the tag which was detected."""
     center: npt.NDArray[np.uint8]
     """The location of the center of the detected tag in the image."""
-    corners: npt.NDArray[np.uint8]
+    corners: npt.NDArray[np.float64]
     """The location of the corners of the detected tag in the image."""
     decision_margin: float
     """A measure of the quality of the binary decoding process. Higher numbers roughly indicate better decodes."""
     hamming: int
     """The number of error bits which were corrected."""
-    tag_poses: List[Pose]
+    tag_poses: Optional[List[Pose]] = None
     """Possible poses of the tag in the camera's coordinate frame, in order from best to worst."""
 
     def __post_init__(self):
-        if not self.tag_poses:
-            raise ValueError('tag_poses is empty')
+        if self.tag_poses is not None and not self.tag_poses:
+            raise ValueError('tag_poses is empty but not None')
 
     @property
-    def best_tag_pose(self) -> Pose:
+    def best_tag_pose(self) -> Optional[Pose]:
         """The best tag pose calculated."""
-        return self.tag_poses[0]
+        return self.tag_poses[0] if self.tag_poses is not None else None

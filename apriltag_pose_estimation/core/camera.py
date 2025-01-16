@@ -4,6 +4,9 @@ import numpy as np
 from numpy import typing as npt
 
 
+__all__ = ['CameraParameters']
+
+
 @dataclass(frozen=True, kw_only=True)
 class CameraParameters:
     """Parameters that represent characteristic information of a camera."""
