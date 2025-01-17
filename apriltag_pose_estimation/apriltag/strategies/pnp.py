@@ -17,16 +17,17 @@ __all__ = ['PerspectiveNPointStrategy']
 
 class PerspectiveNPointStrategy(AprilTagPoseEstimationStrategy):
     """
-    A pose estimation strategy which uses OpenCV's solvePnP function.
+    A pose estimation strategy which solves the Perspective-N-Point problem.
 
-    See also: https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html
+    This strategy is implemented with OpenCV's solvePnP function. See
+    https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html for more information.
     """
     def __init__(self, method: PnPMethod = PnPMethod.ITERATIVE):
         self.__method = method
 
     @property
     def method(self):
-        """The method which this strategy is using for Perspective-N-Point."""
+        """The method which this strategy is using for solving the Perspective-N-Point problem."""
         return self.__method
 
     def estimate_tag_pose(self,

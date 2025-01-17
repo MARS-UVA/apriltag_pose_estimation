@@ -50,6 +50,20 @@ def solve_pnp(object_points: npt.NDArray[np.float64],
               image_points: npt.NDArray[np.float64],
               camera_params: CameraParameters,
               method: PnPMethod = PnPMethod.ITERATIVE) -> List[Pose]:
+    """
+    Solves the Perspective-N-Point problem.
+
+    Internally, this uses OpenCV's solvePnP function. See
+    https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html for more information.
+
+    :param object_points: An nx3 array of 3D points corresponding to positions of the tracked objects in the
+                          world frame.
+    :param image_points: An nx2 array of 2D points corresponding to positions of the tracked objects in the image.
+    :param camera_params: Parameters of the camera used to take the image.
+    :param method: The method by which to solve the Perspective-N-Point problem (default: ``PnPMethod.ITERATIVE``).
+    :return: A list of all possible poses of the world origin in the camera frame.
+    :raise EstimationError: If an error occurs in solving the Perspective-N-Point problem.
+    """
     success, rotation_vectors, translations, errors = cv2.solvePnPGeneric(object_points,
                                                                           image_points,
                                                                           camera_params.get_matrix(),
