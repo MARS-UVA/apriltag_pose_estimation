@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from operator import attrgetter
 from typing import Optional
 
 import numpy as np
@@ -49,7 +48,7 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
         if not poses:
             return self.__use_fallback_strategy(detections, field, camera_params)
 
-        return min(poses, key=attrgetter('error'))
+        return poses[0]
 
     def __use_fallback_strategy(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
                                 camera_params: CameraParameters) -> Optional[Pose]:

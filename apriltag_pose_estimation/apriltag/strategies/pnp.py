@@ -1,4 +1,3 @@
-from operator import attrgetter
 from typing import List
 
 import numpy as np
@@ -62,5 +61,4 @@ class PerspectiveNPointStrategy(AprilTagPoseEstimationStrategy):
         ]) / 2 * tag_size
         image_points = detection.corners
 
-        return sorted(solve_pnp(object_points, image_points, camera_params, method=self.__method),
-                      key=attrgetter('error'))
+        return solve_pnp(object_points, image_points, camera_params, method=self.__method)

@@ -1,4 +1,5 @@
 from enum import IntEnum
+from operator import attrgetter
 from typing import List
 
 import cv2
@@ -61,7 +62,8 @@ def solve_pnp(object_points: npt.NDArray[np.float64],
     :param image_points: An nx2 array of 2D points corresponding to positions of the tracked objects in the image.
     :param camera_params: Parameters of the camera used to take the image.
     :param method: The method by which to solve the Perspective-N-Point problem (default: ``PnPMethod.ITERATIVE``).
-    :return: A list of all possible poses of the world origin in the camera frame.
+    :return: A list of all possible poses of the world origin in the camera frame, ordered from least to most
+             reprojection error.
     :raise EstimationError: If an error occurs in solving the Perspective-N-Point problem.
     """
     success, rotation_vectors, translations, errors = cv2.solvePnPGeneric(object_points,
@@ -72,5 +74,6 @@ def solve_pnp(object_points: npt.NDArray[np.float64],
 
     if not success:
         raise EstimationError('Failed to solve')
-    return [Pose(cv2.Rodrigues(rotation)[0], translation, error=float(error[0]))
-            for rotation, translation, error in zip(rotation_vectors, translations, errors)]
+    return sorted((Pose(cv2.Rodrigues(rotation)[0], translation, error=float(error[0]))
+                   for rotation, translation, error in zip(rotation_vectors, translations, errors)),
+                  key=attrgetter('error'))
