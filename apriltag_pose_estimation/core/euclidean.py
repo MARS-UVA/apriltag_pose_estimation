@@ -24,6 +24,14 @@ class Pose:
     error: Optional[float] = None
     """An error associated with the pose, if any."""
 
+    ambiguity: Optional[float] = None
+    """
+    An ambiguity associated with the pose, if any.
+    
+    Ambiguity is calculated during localization as the ratio of reprojection errors from the best to second-best
+    candidate poses.
+    """
+
     def __post_init__(self):
         if self.rotation_matrix.shape != (3, 3):
             raise ValueError(f'expected shape (3, 3) for rotation matrix, got {self.rotation_matrix.shape}')
@@ -65,6 +73,16 @@ class Pose:
         return cls(rotation_matrix=matrix[:3, :3],
                    translation_vector=matrix[:3, 3].reshape(-1, 1),
                    error=error)
+
+    def with_error(self, error: float) -> 'Pose':
+        """Returns a new Pose object with the same position data but with the given error."""
+        return Pose(rotation_matrix=self.rotation_matrix, translation_vector=self.translation_vector,
+                    error=error)
+
+    def with_ambiguity(self, ambiguity: float) -> 'Pose':
+        """Returns a new Pose object with the same position data but with the given ambiguity."""
+        return Pose(rotation_matrix=self.rotation_matrix, translation_vector=self.translation_vector,
+                    ambiguity=ambiguity)
 
     @property
     def rotation_vector(self) -> npt.NDArray[np.float64]:

@@ -16,23 +16,32 @@ __all__ = ['MultiTagPnPEstimationStrategy']
 
 class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
     """
-    An estimation strategy which solves the Perspective-N-Point problem.
+    An estimation strategy which solves the Perspective-N-Point problem across all detected AprilTag corner points.
 
     This strategy is implemented with OpenCV's solvePnP function. See
     https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html for more information.
 
     Each of the corners of the detected AprilTags is computed in the world frame, and these points are passed into the
-    PnP solver. If there is only one detected AprilTag or if the PnP solver fails, a fallback strategy was used.
+    PnP solver. If there is only one detected AprilTag or if the PnP solver fails, a fallback strategy is used.
+
+    This implementation derives heavily from MultiTag pose estimation in PhotonVision (see
+    https://github.com/PhotonVision/photonvision/blob/main/photon-targeting/src/main/java/org/photonvision/estimation/OpenCVHelp.java#L465).
     """
-    def __init__(self, fallback_strategy: Optional[PoseEstimationStrategy] = None):
+    def __init__(self, fallback_strategy: Optional[PoseEstimationStrategy] = None,
+                 pnp_method: PnPMethod = PnPMethod.SQPNP):
         """
         :param fallback_strategy: A strategy to use if only one AprilTag was detected or the PnP solver fails. Cannot
                                   be a :class:`MultiTagPnPEstimationStrategy`.
+        :param pnp_method: A method the strategy will use to solve the Perspective-N-Point problem. Cannot be
+                           ``PnPMethod.IPPE``. Defaults to ``PnPMethod.SQPNP``.
         """
         super().__init__()
         if isinstance(fallback_strategy, MultiTagPnPEstimationStrategy):
             raise TypeError('multitag fallback strategy cannot be multitag')
+        if pnp_method is PnPMethod.IPPE:
+            raise ValueError('PnP method cannot be IPPE for multitag estimation')
         self.__fallback_strategy = fallback_strategy
+        self.__pnp_method = pnp_method
 
     def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
                       camera_params: CameraParameters) -> Optional[Pose]:
@@ -44,7 +53,7 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
         object_points = field.get_corners(*(detection.tag_id for detection in detections))
         image_points = np.vstack([detection.corners for detection in detections])
 
-        poses = solve_pnp(object_points, image_points, camera_params, method=PnPMethod.SQPNP)
+        poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
         if not poses:
             return self.__use_fallback_strategy(detections, field, camera_params)
 
