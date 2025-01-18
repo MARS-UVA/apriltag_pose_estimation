@@ -26,10 +26,10 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
     This implementation derives heavily from MultiTag pose estimation in PhotonVision (see
     https://github.com/PhotonVision/photonvision/blob/main/photon-targeting/src/main/java/org/photonvision/estimation/OpenCVHelp.java#L465).
     """
-    def __init__(self, pnp_method: PnPMethod = PnPMethod.SQPNP):
+    def __init__(self, pnp_method: PnPMethod = PnPMethod.IPPE):
         """
-        :param pnp_method: A method the strategy will use to solve the Perspective-N-Point problem. Cannot be
-                           ``PnPMethod.IPPE``. Defaults to ``PnPMethod.SQPNP``.
+        :param pnp_method: A method the strategy will use to solve the Perspective-N-Point problem. Defaults to
+        ``PnPMethod.IPPE``.
         """
         super().__init__()
         self.__pnp_method = pnp_method
