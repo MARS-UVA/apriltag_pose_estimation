@@ -26,7 +26,7 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
     PnP solver. If there is only one detected AprilTag or if the PnP solver fails, a fallback strategy is used.
 
     This implementation derives heavily from MultiTag pose estimation in PhotonVision (see
-    https://github.com/PhotonVision/photonvision/blob/main/photon-targeting/src/main/java/org/photonvision/estimation/OpenCVHelp.java#L465).
+    https://github.com/PhotonVision/photonvision/blob/d78f2b8650ac21a54eba94c83931f7b3dd1e32f2/photon-targeting/src/main/java/org/photonvision/estimation/VisionEstimation.java#L122).
     """
     def __init__(self, fallback_strategy: Optional[PoseEstimationStrategy] = None,
                  pnp_method: PnPMethod = PnPMethod.SQPNP):

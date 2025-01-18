@@ -23,8 +23,8 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
     Each of the corners of the detected AprilTags is computed in the world frame, and these points are passed for each
     detected AprilTag individually into the PnP solver.
 
-    This implementation derives heavily from MultiTag pose estimation in PhotonVision (see
-    https://github.com/PhotonVision/photonvision/blob/main/photon-targeting/src/main/java/org/photonvision/estimation/OpenCVHelp.java#L465).
+    This implementation derives heavily from PhotonVision (see
+    https://github.com/PhotonVision/photonvision/blob/d78f2b8650ac21a54eba94c83931f7b3dd1e32f2/photon-targeting/src/main/java/org/photonvision/estimation/VisionEstimation.java#L103).
     """
     def __init__(self, pnp_method: PnPMethod = PnPMethod.IPPE):
         """
