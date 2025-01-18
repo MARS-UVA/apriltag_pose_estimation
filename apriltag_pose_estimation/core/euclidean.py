@@ -19,7 +19,7 @@ class Pose:
     rotation_matrix: npt.NDArray[np.float64]
     """A 3x3 float64 matrix which is the rotation component of the pose."""
     translation_vector: npt.NDArray[np.float64]
-    """A float64 vector which is the translation component of the pose."""
+    """A 3x1 float64 vector which is the translation component of the pose."""
 
     error: Optional[float] = None
     """An error associated with the pose, if any."""
