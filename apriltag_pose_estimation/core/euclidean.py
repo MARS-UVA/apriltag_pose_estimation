@@ -45,8 +45,9 @@ class Pose:
                      error: Optional[float] = None) -> 'Pose':
         """
         Returns a new Pose object constructed from a rotation vector and translation vector.
-        :param rotation_vector: A vector representing the rotation component of the pose in Euler angles, in order of
-                                [roll, pitch, yaw] in radians (shape must be either 3 or 3x1).
+        :param rotation_vector: A vector representing the rotation component of the pose where the direction is the axis
+                                of rotation and the norm is the magnitude of rotation in radians (shape must be either
+                                3 or 3x1).
         :param translation_vector: A vector representing the translation component of the pose in order of
                                    [x, y, z] (shape must be either 3 or 3x1).
         :param error: An error associated with the pose (optional).
@@ -87,7 +88,8 @@ class Pose:
     @property
     def rotation_vector(self) -> npt.NDArray[np.float64]:
         """
-        A vector (3x1 matrix) representing the rotation of the pose in the order of [roll, pitch, yaw] in radians.
+        A vector (3x1 matrix) representing the rotation of the pose where the direction of the vector is the axis of
+        rotation and the norm of the vector is the magnitude of rotation in radians.
         """
         result, _ = cv2.Rodrigues(self.rotation_matrix)
         return result
