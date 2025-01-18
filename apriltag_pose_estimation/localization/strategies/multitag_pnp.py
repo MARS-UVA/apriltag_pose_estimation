@@ -7,6 +7,7 @@ from ..estimation import PoseEstimationStrategy
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
 from ...core.euclidean import Pose
+from ...core.exceptions import EstimationError
 from ...core.field import AprilTagField
 from ...core.pnp import PnPMethod, solve_pnp
 
@@ -37,7 +38,7 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
         """
         super().__init__()
         if isinstance(fallback_strategy, MultiTagPnPEstimationStrategy):
-            raise TypeError('multitag fallback strategy cannot be multitag')
+            raise TypeError('multitag fallback strategy cannot be another multitag PnP strategy')
         if pnp_method is PnPMethod.IPPE:
             raise ValueError('PnP method cannot be IPPE for multitag estimation')
         self.__fallback_strategy = fallback_strategy
@@ -53,7 +54,10 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
         object_points = field.get_corners(*(detection.tag_id for detection in detections))
         image_points = np.vstack([detection.corners for detection in detections])
 
-        poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
+        try:
+            poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
+        except EstimationError:
+            return self.__use_fallback_strategy(detections, field, camera_params)
         if not poses:
             return self.__use_fallback_strategy(detections, field, camera_params)
 
