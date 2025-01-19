@@ -17,7 +17,7 @@ class AprilTagDetection:
     """The ID of the tag which was detected."""
     tag_family: str
     """The family of the tag which was detected."""
-    center: npt.NDArray[np.uint8]
+    center: npt.NDArray[np.float64]
     """The location of the center of the detected tag in the image."""
     corners: npt.NDArray[np.float64]
     """The location of the corners of the detected tag in the image."""

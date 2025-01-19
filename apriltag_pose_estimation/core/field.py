@@ -1,4 +1,4 @@
-from collections.abc import Mapping, KeysView
+from collections.abc import Mapping
 from typing import Dict, List
 
 import numpy as np
@@ -76,4 +76,4 @@ class AprilTagField(Mapping[int, Pose]):
             [-1, -1, 0],
         ]) / 2 * self.tag_size
         corner_points = np.hstack([corner_points, np.ones((4, 1))])
-        self.__corners = {tag_id: (pose.get_matrix() @ corner_points)[:, :-1] for tag_id, pose in self.__tag_positions.items()}
+        self.__corners = {tag_id: (pose.get_matrix() @ corner_points.T)[:-1, :].T for tag_id, pose in self.__tag_positions.items()}

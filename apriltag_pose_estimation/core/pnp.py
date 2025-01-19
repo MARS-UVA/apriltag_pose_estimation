@@ -57,9 +57,10 @@ def solve_pnp(object_points: npt.NDArray[np.float64],
     Internally, this uses OpenCV's solvePnP function. See
     https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html for more information.
 
-    :param object_points: An nx3 array of 3D points corresponding to positions of the tracked objects in the
-                          world frame.
-    :param image_points: An nx2 array of 2D points corresponding to positions of the tracked objects in the image.
+    :param object_points: A nx3 array of 3D points corresponding to positions of the tracked objects in the
+                          world frame. If the PnP solver method being used is ``PnPMethod.IPPE``, this must be
+                          in the tag frame instead of the world frame.
+    :param image_points: A nx2 array of 2D points corresponding to positions of the tracked objects in the image.
     :param camera_params: Parameters of the camera used to take the image.
     :param method: The method by which to solve the Perspective-N-Point problem (default: ``PnPMethod.ITERATIVE``).
     :return: A list of all possible poses of the world origin in the camera frame, ordered from least to most

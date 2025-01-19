@@ -18,6 +18,12 @@ class PoseEstimationStrategy(abc.ABC):
     A strategy has a single method ``estimate_robot_pose`` which estimates the pose of the world origin in the camera
     frame based on detected AprilTag(s).
     """
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        pass
+
     @abc.abstractmethod
     def estimate_pose(self,
                       detections: Sequence[AprilTagDetection],
@@ -40,3 +46,9 @@ class PoseEstimationStrategy(abc.ABC):
                  made.
         """
         pass
+
+    def __str__(self) -> str:
+        return f'<{type(self).__qualname__} object \'{self.name}\' at {id(self):#x}>'
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}()'

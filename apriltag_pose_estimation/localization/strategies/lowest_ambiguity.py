@@ -1,7 +1,11 @@
 from collections.abc import Sequence
 from typing import Optional, List
 
+import cv2
+import numpy as np
+
 from ..estimation import PoseEstimationStrategy
+from ...apriltag.render import OverlayWriter, WHITE
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
 from ...core.euclidean import Pose
@@ -34,15 +38,30 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
         super().__init__()
         self.__pnp_method = pnp_method
 
+    @property
+    def name(self) -> str:
+        return f'lowest-ambiguity-{self.__pnp_method.name}'
+
     def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
                       camera_params: CameraParameters) -> Optional[Pose]:
         if not detections:
             return None
         pose_candidates: List[Pose] = []
         for detection in detections:
-            object_points = field.get_corners(detection.tag_id)
-            image_points = detection.corners
-            poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
+            if self.__pnp_method is PnPMethod.IPPE:
+                object_points = np.array([
+                    [-1, +1, 0],
+                    [+1, +1, 0],
+                    [+1, -1, 0],
+                    [-1, -1, 0],
+                ]) / 2 * field.tag_size
+                image_points = detection.corners
+                tag_poses_in_camera = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
+                poses = [Pose.from_matrix(pose.get_matrix() @ np.linalg.inv(field[detection.tag_id].get_matrix()), error=pose.error) for pose in tag_poses_in_camera]
+            else:
+                object_points = field.get_corners(detection.tag_id)
+                image_points = detection.corners
+                poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
             if len(poses) == 1:
                 best_pose = poses[0]
             else:
@@ -52,3 +71,6 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
             return
 
         return min(pose_candidates, key=lambda pose: pose.ambiguity if pose.ambiguity is not None else float('inf'))
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(pnp_method={self.__pnp_method})'

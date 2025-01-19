@@ -50,6 +50,12 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
         self.__fallback_strategy = fallback_strategy
         self.__pnp_method = pnp_method
 
+    @property
+    def name(self) -> str:
+        return (f'multitag-special-{self.__pnp_method.name}-{self.__fallback_strategy}'
+                if self.__fallback_strategy is not None
+                else f'multitag-special-{self.__pnp_method.name}')
+
     def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
                       camera_params: CameraParameters) -> Optional[Pose]:
         if not detections:
@@ -80,8 +86,13 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
                            .as_matrix())
         return Pose(rotation_matrix=rotation_matrix, translation_vector=translation_vector)
 
+    def __repr__(self) -> str:
+        return (f'{type(self).__name__}(angle_producer={self.__angle_producer!r}, '
+                f'fallback_strategy={self.__fallback_strategy!r}, '
+                f'pnp_method={self.__pnp_method!r})')
+
     def __use_fallback_strategy(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
                                 camera_params: CameraParameters) -> Optional[Pose]:
         if self.__fallback_strategy is None:
             return None
-        return self.estimate_pose(detections, field, camera_params)
+        return self.__fallback_strategy.estimate_pose(detections, field, camera_params)

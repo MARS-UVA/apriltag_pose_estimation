@@ -1,7 +1,6 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from enum import IntEnum
 from itertools import chain
-from typing import List
 
 import cv2
 import numpy as np
@@ -36,7 +35,7 @@ class OverlayWriter:
     """An OverlayWriter overlays graphics onto an image which was used to detect AprilTags."""
     def __init__(self,
                  image: npt.NDArray[np.uint8],
-                 detections: List[AprilTagDetection],
+                 detections: Iterable[AprilTagDetection],
                  camera_params: CameraParameters,
                  tag_size: float):
         """
@@ -57,16 +56,9 @@ class OverlayWriter:
         :param thickness: The thickness of the lines for the square's edges (default: 2).
         :param color: The color of the square (default: blue).
         """
-        object_points = np.array([[
-            [-1, +1, 0],
-            [+1, +1, 0],
-            [+1, -1, 0],
-            [-1, -1, 0],
-            [0, 0, 0]
-        ]]) / 2 * self.__tag_size
         for detection in self.__detections:
-            projected_points = self.__project(object_points, detection.best_tag_pose)
-            for src, dest in zip(projected_points[:4], chain(projected_points[1:4], projected_points[:1])):
+            points = detection.corners.astype(np.int_)
+            for src, dest in zip(points[:4], chain(points[1:4], points[:1])):
                 cv2.line(self.__image, src, dest, color=color.bgr(), thickness=thickness)
 
     def overlay_label(self,

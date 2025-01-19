@@ -34,15 +34,23 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
         :param fallback_strategy: A strategy to use if only one AprilTag was detected or the PnP solver fails. Cannot
                                   be a :class:`MultiTagPnPEstimationStrategy`.
         :param pnp_method: A method the strategy will use to solve the Perspective-N-Point problem. Cannot be
-                           ``PnPMethod.IPPE``. Defaults to ``PnPMethod.SQPNP``.
+                           ``PnPMethod.AP3P`` or ``PnPMethod.IPPE``. Defaults to ``PnPMethod.SQPNP``.
         """
         super().__init__()
         if isinstance(fallback_strategy, MultiTagPnPEstimationStrategy):
             raise TypeError('multitag fallback strategy cannot be another multitag PnP strategy')
+        if pnp_method is PnPMethod.AP3P:
+            raise ValueError('PnP method cannot be AP3P for multitag PnP estimation')
         if pnp_method is PnPMethod.IPPE:
-            raise ValueError('PnP method cannot be IPPE for multitag estimation')
+            raise ValueError('PnP method cannot be IPPE for multitag PnP estimation')
         self.__fallback_strategy = fallback_strategy
         self.__pnp_method = pnp_method
+
+    @property
+    def name(self) -> str:
+        return (f'multitag-pnp-{self.__pnp_method.name}-{self.__fallback_strategy.name}'
+                if self.__fallback_strategy is not None
+                else f'multitag-pnp-{self.__pnp_method.name}')
 
     def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
                       camera_params: CameraParameters) -> Optional[Pose]:
@@ -63,8 +71,11 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
 
         return poses[0]
 
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(fallback_strategy={self.__fallback_strategy!r}, pnp_method={self.__pnp_method!r})'
+
     def __use_fallback_strategy(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
                                 camera_params: CameraParameters) -> Optional[Pose]:
         if self.__fallback_strategy is None:
             return None
-        return self.estimate_pose(detections, field, camera_params)
+        return self.__fallback_strategy.estimate_pose(detections, field, camera_params)

@@ -12,10 +12,9 @@ import matplotlib.animation as anim
 import numpy as np
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
-from apriltag_pose_estimation import CameraParameters, PnPMethod, Pose
-from apriltag_pose_estimation.core.camera import CameraParameters
+from apriltag_pose_estimation.apriltag import AprilTagPoseEstimationStrategy, AprilTagPoseEstimator
+from apriltag_pose_estimation.core import CameraParameters, PnPMethod, Pose
 from apriltag_pose_estimation.apriltag.strategies import (PerspectiveNPointStrategy)
-from apriltag_pose_estimation.core.pnp import PnPMethod
 from apriltag_pose_estimation.apriltag.render import OverlayWriter
 
 
