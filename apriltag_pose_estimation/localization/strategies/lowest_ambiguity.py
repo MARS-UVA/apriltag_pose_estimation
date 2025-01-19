@@ -60,6 +60,8 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
                 object_points = field.get_corners(detection.tag_id)
                 image_points = detection.corners
                 poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
+            if not poses:
+                continue
             if len(poses) == 1:
                 best_pose = poses[0]
             else:
