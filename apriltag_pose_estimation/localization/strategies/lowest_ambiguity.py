@@ -1,11 +1,9 @@
 from collections.abc import Sequence
 from typing import Optional, List
 
-import cv2
 import numpy as np
 
 from ..estimation import PoseEstimationStrategy
-from ...apriltag.render import OverlayWriter, WHITE
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
 from ...core.euclidean import Pose
@@ -73,4 +71,4 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
         return min(pose_candidates, key=lambda pose: pose.ambiguity if pose.ambiguity is not None else float('inf'))
 
     def __repr__(self) -> str:
-        return f'{type(self).__name__}(pnp_method={self.__pnp_method})'
+        return f'{type(self).__name__}(pnp_method={self.__pnp_method!r})'

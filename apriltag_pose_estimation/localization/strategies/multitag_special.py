@@ -6,10 +6,10 @@ import numpy.typing as npt
 from scipy.spatial.transform import Rotation
 
 from ..estimation import PoseEstimationStrategy
-from ...core import EstimationError
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
 from ...core.euclidean import Pose
+from ...core.exceptions import EstimationError
 from ...core.field import AprilTagField
 from ...core.pnp import PnPMethod, solve_pnp
 
@@ -37,7 +37,7 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
                  pnp_method: PnPMethod = PnPMethod.IPPE):
         """
         :param angle_producer: A function which returns the most recently measured angle of the world origin in the
-                               camera frame. This should be a non-pure function.
+                               camera frame as a rotation matrix. This should be a non-pure function.
         :param fallback_strategy: A strategy to use if only one AprilTag was detected or the PnP solver fails. Cannot
                                   be a :class:`MultiTagSpecialEstimationStrategy`.
         :param pnp_method: A method the strategy will use to solve the Perspective-N-Point problem. Defaults to
@@ -80,7 +80,7 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
         weights = np.array([1 / pose.error for pose in poses])
         translation_vector = np.average(np.hstack([pose.translation_vector for pose in poses]),
                                         axis=1,
-                                        weights=weights)
+                                        weights=weights).reshape(-1, 1)
         rotation_matrix = (Rotation.from_matrix(np.array([pose.rotation_matrix for pose in poses]))
                            .mean(weights=weights)
                            .as_matrix())

@@ -14,6 +14,7 @@ from apriltag_pose_estimation.apriltag.render import OverlayWriter
 from apriltag_pose_estimation.core import AprilTagDetection, AprilTagField, CameraParameters, Pose, PnPMethod
 from apriltag_pose_estimation.localization import PoseEstimationStrategy
 from apriltag_pose_estimation.localization.strategies import (MultiTagPnPEstimationStrategy,
+                                                              MultiTagSpecialEstimationStrategy,
                                                               LowestAmbiguityEstimationStrategy)
 from apriltag_pose_estimation.localization.testcase import PoseEstimationStrategyTestCase
 
@@ -54,20 +55,6 @@ def create_detections(field: AprilTagField, tag_ids: Collection[int], camera_par
                               hamming=0,
                               tag_poses=None)
             for tag_id in tag_ids]
-
-
-fallback_strategies = [
-    LowestAmbiguityEstimationStrategy(pnp_method=method)
-    for method in PnPMethod
-]
-
-
-strategies = [
-    MultiTagPnPEstimationStrategy(fallback_strategy=fallback_strategy, pnp_method=method)
-    for fallback_strategy in fallback_strategies
-    for method in PnPMethod
-    if method is not PnPMethod.IPPE and method is not PnPMethod.AP3P
-]
 
 
 # Note: the AprilTag field was taken from Limelight's model of the FRC 2024 game field.
@@ -129,12 +116,32 @@ def get_cases() -> List[PoseEstimationStrategyTestCase]:
              detected_apriltags=[3, 4]),
         case(actual_camera_pose=camera_pose(6.5, 2.5, 90),
              detected_apriltags=[5]),
+        case(actual_camera_pose=camera_pose(6.5, -2, -60),
+             detected_apriltags=[1, 2])
     ]
 
 
-@pytest.mark.parametrize('strategy,case', list(product(strategies, get_cases())))
-def test_strategy(strategy: PoseEstimationStrategy, case: PoseEstimationStrategyTestCase):
-    pose = strategy.estimate_pose(detections=case.detections, field=case.apriltag_field, camera_params=case.camera_params)
+cases = get_cases()
+
+
+def strategy_tester(strategy: PoseEstimationStrategy, case: PoseEstimationStrategyTestCase) -> None:
+    pose = strategy.estimate_pose(detections=case.detections, field=case.apriltag_field,
+                                  camera_params=case.camera_params)
     assert pose is not None
     camera_in_origin = np.linalg.inv(pose.get_matrix())
     assert np.isclose(camera_in_origin, case.actual_camera_pose.get_matrix(), atol=10 ** -2).all()
+
+
+@pytest.mark.parametrize('pnp_method,case', list(product(iter(PnPMethod), cases)))
+def test_lowest_ambiguity_strategy(pnp_method: PnPMethod, case: PoseEstimationStrategyTestCase):
+    strategy_tester(LowestAmbiguityEstimationStrategy(pnp_method=pnp_method), case)
+
+
+@pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product((LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod), [PnPMethod.ITERATIVE, PnPMethod.SQPNP], cases)))
+def test_multitag_pnp_strategy(fallback_strategy: PoseEstimationStrategy, pnp_method: PnPMethod, case: PoseEstimationStrategyTestCase):
+    strategy_tester(MultiTagPnPEstimationStrategy(fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)
+
+
+@pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product([LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod], iter(PnPMethod), cases)))
+def test_multitag_special_strategy(fallback_strategy: PoseEstimationStrategy, pnp_method: PnPMethod, case: PoseEstimationStrategyTestCase):
+    strategy_tester(MultiTagSpecialEstimationStrategy(angle_producer=lambda: case.actual_camera_pose.rotation_matrix, fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)
