@@ -3,11 +3,12 @@ from typing import List
 import numpy as np
 import numpy.typing as npt
 from pupil_apriltags import Detector, Detection
+from scipy.spatial.transform import Rotation
 
 from ..estimation import AprilTagPoseEstimationStrategy
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
-from ...core.euclidean import Pose
+from ...core.euclidean import Transform
 
 
 __all__ = ['HomographyOrthogonalIterationStrategy']
@@ -36,7 +37,7 @@ class HomographyOrthogonalIterationStrategy(AprilTagPoseEstimationStrategy):
                           image: npt.NDArray[np.uint8],
                           detector: Detector,
                           camera_params: CameraParameters,
-                          tag_size: float) -> List[Pose]:
+                          tag_size: float) -> List[Transform]:
         detection: Detection
         # noinspection PyTypeChecker,PyUnresolvedReferences
         return [AprilTagDetection(tag_id=detection.tag_id,
@@ -45,9 +46,11 @@ class HomographyOrthogonalIterationStrategy(AprilTagPoseEstimationStrategy):
                                   corners=detection.corners,
                                   decision_margin=detection.decision_margin,
                                   hamming=detection.hamming,
-                                  tag_poses=[Pose(rotation_matrix=detection.pose_R,
-                                                  translation_vector=detection.pose_t,
-                                                  error=detection.pose_err)])
+                                  tag_poses=[Transform.make(rotation=Rotation.from_matrix(detection.pose_R),
+                                                            translation=detection.pose_t,
+                                                            input_space='tag_optical',
+                                                            output_space='camera_optical',
+                                                            error=detection.pose_err)])
                 for detection in detector.detect(img=image,
                                                  estimate_tag_pose=True,
                                                  camera_params=(camera_params.fx,

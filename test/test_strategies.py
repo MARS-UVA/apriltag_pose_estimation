@@ -11,7 +11,7 @@ import pytest
 from scipy.spatial.transform import Rotation
 
 from apriltag_pose_estimation.apriltag.render import OverlayWriter
-from apriltag_pose_estimation.core import AprilTagDetection, AprilTagField, CameraParameters, Pose, PnPMethod
+from apriltag_pose_estimation.core import AprilTagDetection, AprilTagField, CameraParameters, Transform, PnPMethod
 from apriltag_pose_estimation.localization import PoseEstimationStrategy
 from apriltag_pose_estimation.localization.strategies import (MultiTagPnPEstimationStrategy,
                                                               MultiTagSpecialEstimationStrategy,
@@ -32,61 +32,44 @@ DEPSTECH_CAM_PARAMETERS = CameraParameters(fx=1329.143348,
                                            k3=0.000000)
 
 
-def project_points_onto_camera(points: npt.NDArray[np.float64], camera_params: CameraParameters, camera_in_origin: Pose) -> npt.NDArray[np.float64]:
-    origin_in_camera = Pose.from_matrix(np.linalg.inv(camera_in_origin.get_matrix()))
-    image_points, _ = cv2.projectPoints(points,
-                                        origin_in_camera.rotation_vector,
-                                        origin_in_camera.translation_vector,
-                                        camera_params.get_matrix(),
-                                        camera_params.get_distortion_vector())
-    return image_points[:, 0, :]
-
-
-def create_detections(field: AprilTagField, tag_ids: Collection[int], camera_params: CameraParameters, camera_in_origin: Pose) -> List[AprilTagDetection]:
-    return [AprilTagDetection(tag_id=tag_id,
-                              tag_family=field.tag_family,
-                              center=project_points_onto_camera(field[tag_id].translation_vector.reshape((-1, 3)),
-                                                                camera_params=camera_params,
-                                                                camera_in_origin=camera_in_origin),
-                              corners=project_points_onto_camera(field.get_corners(tag_id),
-                                                                 camera_params=camera_params,
-                                                                 camera_in_origin=camera_in_origin),
-                              decision_margin=60,
-                              hamming=0,
-                              tag_poses=None)
-            for tag_id in tag_ids]
-
-
 # Note: the AprilTag field was taken from Limelight's model of the FRC 2024 game field.
 # https://downloads.limelightvision.io/models/frc2024.fmap
 def get_apriltag_field() -> AprilTagField:
     with files(test.resources).joinpath('frc2024.json').open(mode='r') as fp:
         field_data = json.load(fp)
-    axis_change = np.array([[0, -1, 0, 0],
-                            [0, 0, -1, 0],
-                            [1, 0, 0, 0],
-                            [0, 0, 0, 1]], dtype=np.float64).T
+    axis_change = Transform.from_matrix(np.array([[0, -1, 0, 0],
+                                                  [0, 0, -1, 0],
+                                                  [1, 0, 0, 0],
+                                                  [0, 0, 0, 1]]).T,
+                                        input_space='tag_optical',
+                                        output_space='tag_limelight')
     return AprilTagField(tag_size=0.1651,
-                         tag_positions={fiducial['id']: Pose.from_matrix(np.array(fiducial['transform']).reshape((4, 4)) @ axis_change)
+                         tag_positions={fiducial['id']: Transform.from_matrix(np.array(fiducial['transform'])
+                                                                              .reshape((4, 4)),
+                                                                              input_space='tag_limelight',
+                                                                              output_space='world') @ axis_change
                                         for fiducial in field_data['fiducials']},
                          tag_family='tag36h11')
 
 
-def robot_to_camera_pose(tx: float, ty: float, rot: float, camera_on_robot: Pose) -> Pose:
-    axis_change = np.array([[0, 0, 1, 0],
-                            [-1, 0, 0, 0],
-                            [0, -1, 0, 0],
-                            [0, 0, 0, 1]], dtype=np.float64)
-    robot_in_origin = Pose(rotation_matrix=Rotation.from_euler('xyz',
-                                                               angles=np.radians([0, 0, rot])).as_matrix(),
-                           translation_vector=np.array([tx, ty, 0]).reshape(-1, 1)).get_matrix()
-    return Pose.from_matrix(robot_in_origin @ camera_on_robot.get_matrix() @ axis_change)
+def robot_to_camera_pose(tx: float, ty: float, rot: float, camera_on_robot: Transform) -> Transform:
+    axis_change = Transform.from_matrix(np.array([[0, 0, 1, 0],
+                                                  [-1, 0, 0, 0],
+                                                  [0, -1, 0, 0],
+                                                  [0, 0, 0, 1]]),
+                                        input_space='camera_optical',
+                                        output_space='camera_standard')
+    robot_in_origin = Transform.make(rotation=Rotation.from_euler('xyz', angles=[0, 0, rot], degrees=True),
+                                     translation=[tx, ty, 0],
+                                     input_space='robot_standard',
+                                     output_space='world')
+    return robot_in_origin @ camera_on_robot @ axis_change
 
 
 def get_cases() -> List[PoseEstimationStrategyTestCase]:
     case_id = 0
 
-    def case(actual_camera_pose: Pose, detected_apriltags: Collection[int]) -> PoseEstimationStrategyTestCase:
+    def case(actual_camera_pose: Transform, detected_apriltags: Collection[int]) -> PoseEstimationStrategyTestCase:
         nonlocal case_id
         case = PoseEstimationStrategyTestCase(id_=case_id,
                                               actual_camera_pose=actual_camera_pose,
@@ -105,10 +88,10 @@ def get_cases() -> List[PoseEstimationStrategyTestCase]:
         return robot_to_camera_pose(tx, ty, rot, camera_on_robot)
 
     field = get_apriltag_field()
-    camera_on_robot = Pose(
-        rotation_matrix=Rotation.from_rotvec(np.radians([0, -30, 0])).as_matrix(),
-        translation_vector=np.array([0.304, -0.127, 0.237]).reshape(-1, 1)
-    )
+    camera_on_robot = Transform.make(rotation=Rotation.from_rotvec([0, -30, 0], degrees=True),
+                                     translation=[0.304, -0.127, 0.237],
+                                     input_space='camera_standard',
+                                     output_space='robot_standard')
     return [
         case(actual_camera_pose=camera_pose(3.5, 0, 5),
              detected_apriltags=[3, 4]),
@@ -128,8 +111,10 @@ def strategy_tester(strategy: PoseEstimationStrategy, case: PoseEstimationStrate
     pose = strategy.estimate_pose(detections=case.detections, field=case.apriltag_field,
                                   camera_params=case.camera_params)
     assert pose is not None
-    camera_in_origin = np.linalg.inv(pose.get_matrix())
-    assert np.isclose(camera_in_origin, case.actual_camera_pose.get_matrix(), atol=10 ** -2).all()
+    camera_in_origin = pose.inv()
+    assert camera_in_origin.input_space == case.actual_camera_pose.input_space
+    assert camera_in_origin.output_space == case.actual_camera_pose.output_space
+    assert np.isclose(camera_in_origin.matrix, case.actual_camera_pose.matrix, atol=10 ** -2).all()
 
 
 @pytest.mark.parametrize('pnp_method,case', list(product(iter(PnPMethod), cases)))
@@ -144,4 +129,4 @@ def test_multitag_pnp_strategy(fallback_strategy: PoseEstimationStrategy, pnp_me
 
 @pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product([LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod], iter(PnPMethod), cases)))
 def test_multitag_special_strategy(fallback_strategy: PoseEstimationStrategy, pnp_method: PnPMethod, case: PoseEstimationStrategyTestCase):
-    strategy_tester(MultiTagSpecialEstimationStrategy(angle_producer=lambda: case.actual_camera_pose.rotation_matrix, fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)
+    strategy_tester(MultiTagSpecialEstimationStrategy(angle_producer=lambda: case.actual_camera_pose.rotation, fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)

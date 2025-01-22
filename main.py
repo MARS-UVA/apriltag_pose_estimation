@@ -13,7 +13,7 @@ import numpy as np
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 from apriltag_pose_estimation.apriltag import AprilTagPoseEstimationStrategy, AprilTagPoseEstimator
-from apriltag_pose_estimation.core import CameraParameters, PnPMethod, Pose
+from apriltag_pose_estimation.core import CameraParameters, PnPMethod, Transform
 from apriltag_pose_estimation.apriltag.strategies import (PerspectiveNPointStrategy)
 from apriltag_pose_estimation.apriltag.render import OverlayWriter
 
@@ -64,17 +64,16 @@ class Plotter:
         self.__used_artists: dict[int, Line3DCollection] = {}
         self.__hidden_artists: deque[Line3DCollection] = deque()
 
-    def __call__(self, poses: dict[int, Pose]) -> Iterable[plt.Artist]:
+    def __call__(self, poses: dict[int, Transform]) -> Iterable[plt.Artist]:
         """
         Updates the matplotlib artists to reflect the given poses.
         :param poses: A list of the poses of all visible AprilTags.
         :return: An iterable of all the visible artists after the update.
         """
-        initial_homogenous_points = np.array([
+        initial_points = np.array([
             [0, 1, 0, 0],
             [0, 0, 1, 0],
-            [0, 0, 0, 1],
-            [1, 1, 1, 1]
+            [0, 0, 0, 1]
         ]) * self.__axis_length
         for tag_id in list(self.__used_artists.keys()):
             if tag_id not in poses:
@@ -82,7 +81,7 @@ class Plotter:
                 artist.set_visible(False)
                 self.__hidden_artists.appendleft(artist)
         for tag_id, pose in poses.items():
-            points = (pose.get_matrix() @ initial_homogenous_points)[:3, :]
+            points = pose.transform(initial_points)
             segments = np.array([points[:, (0, i)].T for i in range(1, 4)])
             if tag_id in self.__used_artists:
                 self.__used_artists[tag_id].set_segments(segments)
@@ -97,7 +96,7 @@ class Plotter:
         return list(self.__used_artists.values())
 
 
-def frames(poses_queue: mp.Queue) -> Generator[dict[int, Pose], None, None]:
+def frames(poses_queue: mp.Queue) -> Generator[dict[int, Transform], None, None]:
     """
     A generator factory for poses from the given multiprocessing queue.
     :param poses_queue: The queue which yields poses as they come in. The sentinel value indicating end-of-transmission
@@ -171,7 +170,7 @@ def processor_process(poses_queue: mp.Queue,
                 not_closed, frame = capture.read()
                 image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 if estimates := estimator.estimate_tag_pose(image):
-                    print(estimates[0].best_tag_pose.get_matrix())
+                    print(estimates[0].best_tag_pose.matrix)
                     image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
                     overlay_writer = OverlayWriter(image, estimates, camera_params, tag_size=tag_size)
                     overlay_writer.overlay_cubes()

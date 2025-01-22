@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation
 from ..estimation import PoseEstimationStrategy
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
-from ...core.euclidean import Pose
+from ...core.euclidean import Transform
 from ...core.exceptions import EstimationError
 from ...core.field import AprilTagField
 from ...core.pnp import PnPMethod, solve_pnp
@@ -32,12 +32,12 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
     This method relies on having an accurate source of the camera's angle, such as with an IMU.
     """
     def __init__(self,
-                 angle_producer: Callable[[], npt.NDArray[np.float64]],
+                 angle_producer: Callable[[], Rotation],
                  fallback_strategy: Optional[PoseEstimationStrategy] = None,
                  pnp_method: PnPMethod = PnPMethod.IPPE):
         """
         :param angle_producer: A function which returns the most recently measured angle of the world origin in the
-                               camera frame as a rotation matrix. This should be a non-pure function.
+                               camera frame as a rotation. This should be a non-pure function.
         :param fallback_strategy: A strategy to use if only one AprilTag was detected or the PnP solver fails. Cannot
                                   be a :class:`MultiTagSpecialEstimationStrategy`.
         :param pnp_method: A method the strategy will use to solve the Perspective-N-Point problem. Defaults to
@@ -57,34 +57,43 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
                 else f'multitag-special-{self.__pnp_method.name}')
 
     def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
-                      camera_params: CameraParameters) -> Optional[Pose]:
+                      camera_params: CameraParameters) -> Optional[Transform]:
         if not detections:
             return None
         if len(detections) == 1:
             return self.__use_fallback_strategy(detections, field, camera_params)
 
-        poses: List[Pose] = []
-        actual_rotation_matrix = self.__angle_producer()
+        poses: List[Transform] = []
+        actual_rotation = self.__angle_producer()
         for detection in detections:
             object_points = field.get_corners(detection.tag_id)
             image_points = detection.corners
             try:
-                pose_candidates = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
+                pose_candidates = solve_pnp(object_points,
+                                            image_points,
+                                            camera_params,
+                                            method=self.__pnp_method,
+                                            object_points_frame=field[detection.tag_id].output_space)
             except EstimationError:
                 continue
             poses.append(min(pose_candidates,
-                             key=lambda pose: Rotation.from_matrix(pose.rotation_matrix @ actual_rotation_matrix)
+                             key=lambda pose: Rotation.from_matrix(pose.rotation.as_matrix() @ actual_rotation.as_matrix())
                                                       .magnitude()))
         if not poses:
             return self.__use_fallback_strategy(detections, field, camera_params)
+        if __debug__:
+            input_space = poses[0].input_space
+            output_space = poses[0].output_space
+            assert all(pose.input_space == input_space and pose.output_space == output_space for pose in poses)
         weights = np.array([1 / pose.error for pose in poses])
-        translation_vector = np.average(np.hstack([pose.translation_vector for pose in poses]),
-                                        axis=1,
-                                        weights=weights).reshape(-1, 1)
-        rotation_matrix = (Rotation.from_matrix(np.array([pose.rotation_matrix for pose in poses]))
-                           .mean(weights=weights)
-                           .as_matrix())
-        return Pose(rotation_matrix=rotation_matrix, translation_vector=translation_vector)
+        translation = np.average(np.vstack([pose.translation for pose in poses]),
+                                 axis=0,
+                                 weights=weights)
+        rotation = Rotation.from_matrix(np.array([pose.rotation.as_matrix() for pose in poses])).mean(weights=weights)
+        return Transform.make(rotation=rotation,
+                              translation=translation,
+                              input_space=poses[0].input_space,
+                              output_space=poses[0].output_space)
 
     def __repr__(self) -> str:
         return (f'{type(self).__name__}(angle_producer={self.__angle_producer!r}, '
@@ -92,7 +101,7 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
                 f'pnp_method={self.__pnp_method!r})')
 
     def __use_fallback_strategy(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
-                                camera_params: CameraParameters) -> Optional[Pose]:
+                                camera_params: CameraParameters) -> Optional[Transform]:
         if self.__fallback_strategy is None:
             return None
         return self.__fallback_strategy.estimate_pose(detections, field, camera_params)

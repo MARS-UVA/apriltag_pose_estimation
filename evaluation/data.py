@@ -3,7 +3,7 @@ from dataclasses import asdict
 import numpy as np
 import pandas as pd
 
-from apriltag_pose_estimation.core import PnPMethod, Pose, Twist
+from apriltag_pose_estimation.core import PnPMethod, Transform, Twist
 from apriltag_pose_estimation.apriltag.strategies import PerspectiveNPointStrategy
 from evaluate import EvaluationCase, EvaluationRun, EvaluationResult, MultipleStrategyEvaluationResults
 
@@ -47,7 +47,8 @@ def get_mock_data() -> MultipleStrategyEvaluationResults:
         for case_index in range(50):
             case = EvaluationCase(name=f'case{case_index}',
                                   image=rng.integers(low=0, high=128, size=(480, 360)).astype(np.uint8),
-                                  expected_tag_pose=Pose.from_matrix(np.identity(4)))
+                                  expected_tag_pose=Transform.identity(input_space='tag_optical',
+                                                                       output_space='camera_optical'))
             average_time = rng.normal(0.01, 0.002)
             cases[case] = EvaluationResult.make([EvaluationRun.make(time_seconds=float(rng.normal(average_time, 0.002)),
                                                                     memory_bytes=int(rng.normal(65536, 128)),

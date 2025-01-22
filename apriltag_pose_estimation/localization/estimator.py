@@ -7,7 +7,7 @@ from pupil_apriltags import Detector
 from .estimation import PoseEstimationStrategy
 from ..core.camera import CameraParameters
 from ..core.detection import AprilTagDetection
-from ..core.euclidean import Pose
+from ..core.euclidean import Transform
 from ..core.field import AprilTagField
 
 
@@ -39,7 +39,7 @@ class PoseEstimator:
         self.__camera_params = camera_params
         self.__detector = Detector(families=self.__field.tag_family, **detector_kwargs)
 
-    def estimate_pose(self, image: npt.NDArray[np.uint8]) -> Optional[Pose]:
+    def estimate_pose(self, image: npt.NDArray[np.uint8]) -> Optional[Transform]:
         """
         Estimates the pose of the camera based on AprilTags in the given image.
 

@@ -6,7 +6,7 @@ import numpy as np
 from ..estimation import PoseEstimationStrategy
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
-from ...core.euclidean import Pose
+from ...core.euclidean import Transform
 from ...core.field import AprilTagField
 from ...core.pnp import PnPMethod, solve_pnp
 
@@ -41,10 +41,10 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
         return f'lowest-ambiguity-{self.__pnp_method.name}'
 
     def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
-                      camera_params: CameraParameters) -> Optional[Pose]:
+                      camera_params: CameraParameters) -> Optional[Transform]:
         if not detections:
             return None
-        pose_candidates: List[Pose] = []
+        pose_candidates: List[Transform] = []
         for detection in detections:
             if self.__pnp_method is PnPMethod.IPPE:
                 object_points = np.array([
@@ -54,12 +54,14 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
                     [-1, -1, 0],
                 ]) / 2 * field.tag_size
                 image_points = detection.corners
-                tag_poses_in_camera = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
-                poses = [Pose.from_matrix(pose.get_matrix() @ np.linalg.inv(field[detection.tag_id].get_matrix()), error=pose.error) for pose in tag_poses_in_camera]
+                tag_poses_in_camera = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method,
+                                                object_points_frame='tag_optical')
+                poses = [(pose @ field[detection.tag_id].inv()).with_error(pose.error) for pose in tag_poses_in_camera]
             else:
                 object_points = field.get_corners(detection.tag_id)
                 image_points = detection.corners
-                poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
+                poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method,
+                                  object_points_frame=field[detection.tag_id].output_space)
             if not poses:
                 continue
             if len(poses) == 1:

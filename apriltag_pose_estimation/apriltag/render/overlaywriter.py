@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 from .color import Color, RED, GREEN, BLUE
-from ...core.euclidean import Pose
+from ...core.euclidean import Transform
 from ...core.detection import AprilTagDetection
 from ...core.camera import CameraParameters
 
@@ -195,10 +195,10 @@ class OverlayWriter:
                     cv2.line(self.__image, projected_points[i], projected_points[j], color=color.bgr(), thickness=2)
                 cv2.addWeighted(self.__image, alpha, image_copy, 1 - alpha, 0, self.__image)
 
-    def __project(self, object_points: npt.NDArray[np.float64], pose: Pose):
+    def __project(self, object_points: npt.NDArray[np.float64], pose: Transform):
         projected_points, _ = cv2.projectPoints(object_points,
-                                                pose.rotation_vector,
-                                                pose.translation_vector,
+                                                pose.opencv_rotation_vector,
+                                                pose.opencv_translation_vector,
                                                 self.__camera_params.get_matrix(),
                                                 self.__camera_params.get_distortion_vector())
         projected_points = np.round(projected_points).astype(int).reshape((-1, 2))

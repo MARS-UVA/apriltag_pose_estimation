@@ -4,7 +4,7 @@ from typing import Optional, List
 import numpy as np
 from numpy import typing as npt
 
-from .euclidean import Pose
+from .euclidean import Transform
 
 
 __all__ = ['AprilTagDetection']
@@ -25,7 +25,7 @@ class AprilTagDetection:
     """A measure of the quality of the binary decoding process. Higher numbers roughly indicate better decodes."""
     hamming: int
     """The number of error bits which were corrected."""
-    tag_poses: Optional[List[Pose]] = None
+    tag_poses: Optional[List[Transform]] = None
     """Possible poses of the tag in the camera's coordinate frame, in order from best to worst."""
 
     def __post_init__(self):
@@ -33,6 +33,6 @@ class AprilTagDetection:
             raise ValueError('tag_poses is empty but not None')
 
     @property
-    def best_tag_pose(self) -> Optional[Pose]:
+    def best_tag_pose(self) -> Optional[Transform]:
         """The best tag pose calculated."""
         return self.tag_poses[0] if self.tag_poses is not None else None

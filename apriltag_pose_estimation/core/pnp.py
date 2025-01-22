@@ -1,12 +1,12 @@
 from enum import IntEnum
 from operator import attrgetter
-from typing import List
+from typing import List, Optional
 
 import cv2
 import numpy as np
 from numpy import typing as npt
 
-from .euclidean import Pose
+from .euclidean import Transform
 from .camera import CameraParameters
 from .exceptions import EstimationError
 
@@ -50,7 +50,8 @@ class PnPMethod(IntEnum):
 def solve_pnp(object_points: npt.NDArray[np.float64],
               image_points: npt.NDArray[np.float64],
               camera_params: CameraParameters,
-              method: PnPMethod = PnPMethod.ITERATIVE) -> List[Pose]:
+              method: PnPMethod = PnPMethod.ITERATIVE,
+              object_points_frame: Optional[str] = None) -> List[Transform]:
     """
     Solves the Perspective-N-Point problem.
 
@@ -75,6 +76,10 @@ def solve_pnp(object_points: npt.NDArray[np.float64],
 
     if not success:
         raise EstimationError('Failed to solve')
-    return sorted((Pose(cv2.Rodrigues(rotation)[0], translation, error=float(error[0]))
+    return sorted((Transform.from_opencv_vectors(rotation_vector=rotation,
+                                                 translation_vector=translation,
+                                                 input_space=object_points_frame,
+                                                 output_space='camera_optical',
+                                                 error=float(error[0]))
                    for rotation, translation, error in zip(rotation_vectors, translations, errors)),
                   key=attrgetter('error'))

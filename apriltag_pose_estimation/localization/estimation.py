@@ -4,7 +4,7 @@ from typing import Optional, Dict
 
 from ..core.camera import CameraParameters
 from ..core.detection import AprilTagDetection
-from ..core.euclidean import Pose
+from ..core.euclidean import Transform
 from ..core.field import AprilTagField
 
 
@@ -28,7 +28,7 @@ class PoseEstimationStrategy(abc.ABC):
     def estimate_pose(self,
                       detections: Sequence[AprilTagDetection],
                       field: AprilTagField,
-                      camera_params: CameraParameters) -> Optional[Pose]:
+                      camera_params: CameraParameters) -> Optional[Transform]:
         """
         Estimates the pose of the camera in the world frame based on the detected AprilTag(s).
 

@@ -6,7 +6,7 @@ import numpy as np
 from ..estimation import PoseEstimationStrategy
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
-from ...core.euclidean import Pose
+from ...core.euclidean import Transform
 from ...core.exceptions import EstimationError
 from ...core.field import AprilTagField
 from ...core.pnp import PnPMethod, solve_pnp
@@ -53,7 +53,7 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
                 else f'multitag-pnp-{self.__pnp_method.name}')
 
     def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
-                      camera_params: CameraParameters) -> Optional[Pose]:
+                      camera_params: CameraParameters) -> Optional[Transform]:
         if not detections:
             return None
         if len(detections) == 1:
@@ -63,7 +63,8 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
         image_points = np.vstack([detection.corners for detection in detections])
 
         try:
-            poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method)
+            poses = solve_pnp(object_points, image_points, camera_params, method=self.__pnp_method,
+                              object_points_frame=field.output_space)
         except EstimationError:
             return self.__use_fallback_strategy(detections, field, camera_params)
         if not poses:
@@ -75,7 +76,7 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
         return f'{type(self).__name__}(fallback_strategy={self.__fallback_strategy!r}, pnp_method={self.__pnp_method!r})'
 
     def __use_fallback_strategy(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
-                                camera_params: CameraParameters) -> Optional[Pose]:
+                                camera_params: CameraParameters) -> Optional[Transform]:
         if self.__fallback_strategy is None:
             return None
         return self.__fallback_strategy.estimate_pose(detections, field, camera_params)

@@ -7,13 +7,13 @@ import numpy.typing as npt
 
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
-from ...core.euclidean import Pose
+from ...core.euclidean import Transform
 from ...core.field import AprilTagField
 
 
 class PoseEstimationStrategyTestCase:
 
-    def __init__(self, id_: int, actual_camera_pose: Pose, apriltag_field: AprilTagField, detected_apriltags: Collection[int], camera_params: CameraParameters):
+    def __init__(self, id_: int, actual_camera_pose: Transform, apriltag_field: AprilTagField, detected_apriltags: Collection[int], camera_params: CameraParameters):
         self.__id = id_
         self.__actual_camera_pose = actual_camera_pose
         self.__apriltag_field = apriltag_field
@@ -27,7 +27,7 @@ class PoseEstimationStrategyTestCase:
         return self.__id
 
     @property
-    def actual_camera_pose(self) -> Pose:
+    def actual_camera_pose(self) -> Transform:
         return self.__actual_camera_pose
 
     @property
@@ -63,7 +63,7 @@ class PoseEstimationStrategyTestCase:
     def __create_detections(self):
         return [AprilTagDetection(tag_id=tag_id,
                                   tag_family=self.__apriltag_field.tag_family,
-                                  center=_project_points_onto_camera(self.__apriltag_field[tag_id].translation_vector.reshape((-1, 3)),
+                                  center=_project_points_onto_camera(self.__apriltag_field[tag_id].opencv_translation_vector,
                                                                      camera_params=self.__camera_params,
                                                                      camera_in_origin=self.__actual_camera_pose),
                                   corners=_project_points_onto_camera(self.__apriltag_field.get_corners(tag_id),
@@ -75,11 +75,11 @@ class PoseEstimationStrategyTestCase:
                 for tag_id in self.__detected_apriltags]
 
 
-def _project_points_onto_camera(points: npt.NDArray[np.float64], camera_params: CameraParameters, camera_in_origin: Pose) -> npt.NDArray[np.float64]:
-    origin_in_camera = Pose.from_matrix(np.linalg.inv(camera_in_origin.get_matrix()))
+def _project_points_onto_camera(points: npt.NDArray[np.float64], camera_params: CameraParameters, camera_in_origin: Transform) -> npt.NDArray[np.float64]:
+    origin_in_camera = camera_in_origin.inv()
     image_points, _ = cv2.projectPoints(points,
-                                        origin_in_camera.rotation_vector,
-                                        origin_in_camera.translation_vector,
+                                        origin_in_camera.opencv_rotation_vector,
+                                        origin_in_camera.opencv_translation_vector,
                                         camera_params.get_matrix(),
                                         camera_params.get_distortion_vector())
     return image_points[:, 0, :]

@@ -7,7 +7,7 @@ from pupil_apriltags import Detector, Detection
 from ..estimation import AprilTagPoseEstimationStrategy
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
-from ...core.euclidean import Pose
+from ...core.euclidean import Transform
 from ...core.pnp import PnPMethod, solve_pnp
 
 
@@ -52,7 +52,7 @@ class PerspectiveNPointStrategy(AprilTagPoseEstimationStrategy):
     def __get_poses_from_corners(self,
                                  detection: Detection,
                                  camera_params: CameraParameters,
-                                 tag_size: float) -> List[Pose]:
+                                 tag_size: float) -> List[Transform]:
         object_points = np.array([
             [-1, +1, 0],
             [+1, +1, 0],

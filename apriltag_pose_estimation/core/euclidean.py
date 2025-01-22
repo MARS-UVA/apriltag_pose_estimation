@@ -8,121 +8,262 @@ from scipy.linalg import expm, logm
 from scipy.spatial.transform import Rotation
 
 
-__all__ = ['Pose', 'Twist']
+__all__ = ['Transform', 'Twist']
 
 
 @dataclass(frozen=True)
-class Pose:
+class Transform:
     """
-    An object representing the pose of an object in 3D Euclidean space (an element of SE(3)).
+    An object representing a Euclidean transformation in 3D (an element of the Lie group E(3)).
+
+    The group operation is assigned to the matrix multiplication operator ``@``.
+
+    ``Transform`` objects may have an associated input space and output space, which are represented as strings. Before
+    performing transformations, the output space of the first transformation is confirmed to match the input space of
+    the second. This is designed to prevent erroneous operations. The checks are disabled in optimized mode.
+
+    Client code should avoid calling the constructor directly since the class method constructors provide safer options.
     """
-    rotation_matrix: npt.NDArray[np.float64]
-    """A 3x3 float64 matrix which is the rotation component of the pose."""
-    translation_vector: npt.NDArray[np.float64]
-    """A 3x1 float64 vector which is the translation component of the pose."""
+    matrix: npt.NDArray[np.float64]
+    """
+    A 4x4 matrix which represents the transformation.
+    
+    The 3x3 leading principal submatrix describes the rotation associated with this transformation. The 3x1 vector
+    consisting of the first three rows of the last column describes the translation associated with the transformation.
+    The bottom right entry is always 1, and the other entries in the last row are always 0.
+    
+    This representation was chosen because this is the matrix representation of the Lie group E(3).
+    """
+
+    input_space: Optional[str] = None
+    """A string indicating the input space of this transformation."""
+    output_space: Optional[str] = None
+    """A string indicating the input space of this transformation."""
 
     error: Optional[float] = None
-    """An error associated with the pose, if any."""
+    """An error associated with the transformation, if any."""
 
     ambiguity: Optional[float] = None
     """
-    An ambiguity associated with the pose, if any.
+    An ambiguity associated with the transformation, if any.
     
     Ambiguity is calculated during localization as the ratio of reprojection errors from the best to second-best
-    candidate poses.
+    candidate transformations.
     """
 
     def __post_init__(self):
-        if self.rotation_matrix.shape != (3, 3):
-            raise ValueError(f'expected shape (3, 3) for rotation matrix, got {self.rotation_matrix.shape}')
-        if self.translation_vector.shape != (3, 1):
-            raise ValueError(f'expected shape (3, 1) for translation vector, got {self.translation_vector.shape}')
+        if self.matrix.shape != (4, 4):
+            raise ValueError('the transformation matrix must be 4x4')
+        if __debug__:
+            rotation_det = np.linalg.det(self.matrix[:-1, :-1])
+            if not (np.isclose(rotation_det, 1) or np.isclose(rotation_det, -1)):
+                raise ValueError('the rotation component of the matrix must have determinant +1 or -1')
+            if not np.isclose(self.matrix[-1, :-1], 0).all():
+                raise ValueError(f'the bottom row should be [0, 0, 0, 1] '
+                                 f'(got [{', '.join(str(x) for x in self.matrix[-1])}]')
 
     @classmethod
-    def from_vectors(cls,
-                     rotation_vector: npt.NDArray[np.float64],
-                     translation_vector: npt.NDArray[np.float64],
-                     error: Optional[float] = None) -> 'Pose':
+    def identity(cls,
+                 input_space: Optional[str] = None,
+                 output_space: Optional[str] = None,
+                 error: Optional[float] = None,
+                 ambiguity: Optional[float] = None) -> 'Transform':
         """
-        Returns a new Pose object constructed from a rotation vector and translation vector.
+        Creates a new ``Transform`` object that represents the identity transformation.
+        :param input_space: The input space of the transformation (optional).
+        :param output_space: The output space of the transformation (optional).
+        :param error: The error associated with the transformation (optional).
+        :param ambiguity: The ambiguity associated with the transformation (optional).
+        :return: A new ``Transform`` object that represents the identity transformation.
+        """
+        return cls(matrix=np.eye(4),
+                   input_space=input_space,
+                   output_space=output_space,
+                   error=error,
+                   ambiguity=ambiguity)
+
+
+    @classmethod
+    def make(cls,
+             rotation: Rotation,
+             translation: npt.ArrayLike,
+             input_space: Optional[str] = None,
+             output_space: Optional[str] = None,
+             error: Optional[float] = None,
+             ambiguity: Optional[float] = None) -> 'Transform':
+        """
+        Creates a new ``Transform`` object.
+        :param rotation: The rotation associated with the transformation.
+        :param translation: The translation associated with the transformation, in order of [x, y, z].
+        :param input_space: The input space of the transformation (optional).
+        :param output_space: The output space of the transformation (optional).
+        :param error: The error associated with the transformation (optional).
+        :param ambiguity: The ambiguity associated with the transformation (optional).
+        :return: A new ``Transform`` object.
+        """
+        return cls(matrix=np.block([[rotation.as_matrix(), np.array(translation, dtype=np.float64).reshape(-1, 1)],
+                                    [np.zeros(shape=(1, 3)), 1]]),
+                   input_space=input_space,
+                   output_space=output_space,
+                   error=error,
+                   ambiguity=ambiguity)
+
+    @classmethod
+    def from_opencv_vectors(cls,
+                            rotation_vector: npt.NDArray[np.float64],
+                            translation_vector: npt.NDArray[np.float64],
+                            input_space: Optional[str] = None,
+                            output_space: Optional[str] = None,
+                            error: Optional[float] = None,
+                            ambiguity: Optional[float] = None) -> 'Transform':
+        """
+        Returns a new Transform object constructed from a rotation vector and translation vector in the format used by
+        OpenCV's solvePnP algorithm.
         :param rotation_vector: A vector representing the rotation component of the pose where the direction is the axis
                                 of rotation and the norm is the magnitude of rotation in radians (shape must be either
                                 3 or 3x1).
         :param translation_vector: A vector representing the translation component of the pose in order of
                                    [x, y, z] (shape must be either 3 or 3x1).
-        :param error: An error associated with the pose (optional).
-        :return: A Pose created from the given vectors.
+
+        :param input_space: The input space of the transformation (optional).
+        :param output_space: The output space of the transformation (optional).
+        :param error: The error associated with the transformation (optional).
+        :param ambiguity: The ambiguity associated with the transformation (optional).
+        :return: A Transform created from the given vectors.
         """
-        rotation_matrix, _ = cv2.Rodrigues(rotation_vector.astype(np.float64))
-        return cls(rotation_matrix=rotation_matrix,
-                   translation_vector=translation_vector.astype(np.float64).reshape(-1, 1),
-                   error=error)
+        return cls.make(rotation=Rotation.from_rotvec(rotation_vector.reshape(-1)),
+                        translation=translation_vector.astype(np.float64),
+                        input_space=input_space,
+                        output_space=output_space,
+                        error=error,
+                        ambiguity=ambiguity)
 
     @classmethod
     def from_matrix(cls,
                     matrix: npt.NDArray[np.float64],
-                    error: Optional[float] = None):
+                    input_space: Optional[str] = None,
+                    output_space: Optional[str] = None,
+                    error: Optional[float] = None,
+                    ambiguity: Optional[float] = None) -> 'Transform':
         """
-        Returns a new Pose object constructed from the given matrix representing an element of SE(3).
-        :param matrix: The matrix, an element of SE(3).
-        :param error: An error associated with the pose (optional).
-        :return: A new Pose object constructed from the given matrix.
+        Returns a new Transform object constructed from the given matrix.
+
+        The 3x3 leading principal submatrix describes the rotation associated with this transformation. The 3x1 vector
+        consisting of the first three rows of the last column describes the translation associated with the
+        transformation. The bottom right entry is always 1, and the other entries in the last row are always 0.
+
+        :param matrix: The matrix which represents the transformation.
+        :param input_space: The input space of the transformation (optional).
+        :param output_space: The output space of the transformation (optional).
+        :param error: The error associated with the transformation (optional).
+        :param ambiguity: The ambiguity associated with the transformation (optional).
+        :return: A new Transform object constructed from the given matrix.
         """
-        if matrix.shape != (4, 4):
-            raise ValueError(f'matrix must be shape (4, 4), got {matrix.shape}')
-        matrix = matrix.astype(np.float64)
-        return cls(rotation_matrix=matrix[:3, :3],
-                   translation_vector=matrix[:3, 3].reshape(-1, 1),
-                   error=error)
+        return cls(matrix=matrix.astype(np.float64),
+                   input_space=input_space,
+                   output_space=output_space,
+                   error=error,
+                   ambiguity=ambiguity)
 
-    def with_error(self, error: float) -> 'Pose':
-        """Returns a new Pose object with the same position data but with the given error."""
-        return Pose(rotation_matrix=self.rotation_matrix, translation_vector=self.translation_vector,
-                    error=error)
+    def with_input_space(self, input_space: str) -> 'Transform':
+        """Returns a new Transform object representing the same transformation but with the given input space."""
+        return Transform(matrix=self.matrix,
+                         input_space=input_space,
+                         output_space=self.output_space,
+                         error=self.error,
+                         ambiguity=self.ambiguity)
 
-    def with_ambiguity(self, ambiguity: float) -> 'Pose':
-        """Returns a new Pose object with the same position data but with the given ambiguity."""
-        return Pose(rotation_matrix=self.rotation_matrix, translation_vector=self.translation_vector,
-                    ambiguity=ambiguity)
+    def with_output_space(self, output_space: str) -> 'Transform':
+        """Returns a new Transform object representing the same transformation but with the given output space."""
+        return Transform(matrix=self.matrix,
+                         input_space=self.input_space,
+                         output_space=output_space,
+                         error=self.error,
+                         ambiguity=self.ambiguity)
+
+    def with_error(self, error: float) -> 'Transform':
+        """Returns a new Transform object representing the same transformation but with the given error."""
+        return Transform(matrix=self.matrix,
+                         input_space=self.input_space,
+                         output_space=self.output_space,
+                         error=error,
+                         ambiguity=self.ambiguity)
+
+    def with_ambiguity(self, ambiguity: float) -> 'Transform':
+        """Returns a new Transform object with the same position data but with the given ambiguity."""
+        return Transform(matrix=self.matrix,
+                         input_space=self.input_space,
+                         output_space=self.output_space,
+                         error=self.error,
+                         ambiguity=ambiguity)
 
     @property
-    def rotation_vector(self) -> npt.NDArray[np.float64]:
+    def rotation(self) -> Rotation:
+        """The rotation associated with the transformation."""
+        return Rotation.from_matrix(self.matrix[:-1, :-1])
+
+    @property
+    def translation(self) -> npt.NDArray[np.float64]:
+        """The translation associated with the transformation as a NumPy array of shape (3,)."""
+        return self.matrix[:-1, -1]
+
+    @property
+    def opencv_rotation_vector(self) -> npt.NDArray[np.float64]:
         """
-        A vector (3x1 matrix) representing the rotation of the pose where the direction of the vector is the axis of
-        rotation and the norm of the vector is the magnitude of rotation in radians.
+        A 3x1 matrix representing the rotation of the pose where the direction of the vector is the axis of rotation and
+        the norm of the vector is the magnitude of rotation in radians.
         """
-        result, _ = cv2.Rodrigues(self.rotation_matrix)
+        result, _ = cv2.Rodrigues(self.matrix[:-1, :-1])
         return result
 
     @property
-    def rotation_quaternion(self) -> npt.NDArray[np.float64]:
+    def opencv_translation_vector(self) -> npt.NDArray[np.float64]:
         """
-        A 4-vector representing the rotation of the pose as a quaternion in order of [x, y, z, w] (w is the scalar
-        component).
+        A 3x1 matrix representing the translation associated with the transformation as a NumPy array of shape (3,).
         """
-        return Rotation.from_matrix(self.rotation_matrix).as_quat()
+        return self.matrix[:-1, -1].reshape(-1, 1)
 
-    def get_matrix(self) -> npt.NDArray[np.float64]:
+    def transform(self, points: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         """
-        Returns a 4x4 homogenous matrix representation of the pose.
+        Transforms the given points using this transformation.
+        :param points: A 3xN array of points.
+        :return: The transformed points as a 3xN array.
+        """
+        if points.shape[0] != 3:
+            raise ValueError(f'points must be 3 dimensional (got {points.shape[0]} dimensions)')
+        homogeneous_points = np.ones(shape=(points.shape[0] + 1, points.shape[1]))
+        homogeneous_points[:-1, :] = points
+        return (self.matrix @ homogeneous_points)[:-1, :]
 
-        The resulting matrix is an element of SE(3) and is a transformation from the frame of the posed object to the
-        reference frame.
-        :return: The matrix representation of the pose.
-        """
-        return np.block([[self.rotation_matrix, self.translation_vector],
-                         [np.zeros((1, 3), dtype=np.float64), 1]])
+    def __matmul__(self, other: 'Transform') -> 'Transform':
+        if not isinstance(other, Transform):
+            return NotImplemented
+        if __debug__:
+            if (self.input_space is not None and self.output_space is not None
+                    and other.output_space != self.input_space):
+                raise ValueError(f'T2 @ T1: T1 output space ({other.output_space}) does not match '
+                                 f'T2 input space ({self.input_space})')
+        return Transform(matrix=self.matrix @ other.matrix,
+                         input_space=other.input_space,
+                         output_space=self.output_space)
+
+    def inv(self) -> 'Transform':
+        return Transform(matrix=np.linalg.inv(self.matrix),
+                         input_space=self.output_space,
+                         output_space=self.input_space,
+                         error=self.error,
+                         ambiguity=self.ambiguity)
 
     def log(self) -> 'Twist':
         """
-        Returns the image of the logarithmic map applied to this pose.
+        Returns the image of the logarithmic map applied to this transformation.
 
-        This is the twist of a particle which moved from the origin to this pose with constant angular and linear
-        velocity for one seconds.
+        This is the twist of a particle which moved from the origin of the input space to the pose represented by this
+        transformation with constant angular and linear velocity for one second.
 
-        :return: The image of the logarithmic map applied to this pose.
+        :return: The image of the logarithmic map applied to this transformation.
         """
-        return Twist.from_matrix(logm(self.get_matrix()))
+        return Twist.from_matrix(logm(self.matrix, disp=True))
 
 
 @dataclass(frozen=True)
@@ -219,7 +360,7 @@ class Twist:
         return Twist(angular_velocity_matrix=self.angular_velocity_matrix / other,
                      linear_velocity_vector=self.linear_velocity_vector / other)
 
-    def exp(self) -> 'Pose':
+    def exp(self) -> 'Transform':
         """
         Returns the image of the exponential map applied to this twist.
 
@@ -228,4 +369,4 @@ class Twist:
 
         :return: The image of the exponential map applied to this twist.
         """
-        return Pose.from_matrix(expm(self.get_matrix()))
+        return Transform.from_matrix(expm(self.get_matrix()))

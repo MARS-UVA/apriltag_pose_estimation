@@ -9,7 +9,7 @@ from typing import List, Tuple, Dict, TypeAlias, Any
 import numpy as np
 import numpy.typing as npt
 
-from apriltag_pose_estimation.core import CameraParameters, Pose, Twist
+from apriltag_pose_estimation.core import CameraParameters, Transform, Twist
 from apriltag_pose_estimation.apriltag import AprilTagPoseEstimator, AprilTagPoseEstimationStrategy
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class EvaluationCase:
     """The name of the case."""
     image: npt.NDArray[np.uint8]
     """The image for the case. The image should contain an AprilTag which is detectable."""
-    expected_tag_pose: Pose
+    expected_tag_pose: Transform
     """The expected pose of the tag."""
 
     def __hash__(self):
@@ -40,7 +40,7 @@ class EvaluationRun:
     """The time it took to run the case, in seconds."""
     memory_bytes: int
     """The amount of memory used to run the case, in bytes."""
-    calculated_tag_pose: Pose
+    calculated_tag_pose: Transform
     """The calculated pose of the AprilTag."""
     error: Twist
     """The error from the true pose, expressed as a twist."""
@@ -48,7 +48,7 @@ class EvaluationRun:
     """The magnitude of the error from the true pose."""
 
     @classmethod
-    def make(cls, time_seconds: float, memory_bytes: int, calculated_tag_pose: Pose, expected_tag_pose: Pose) -> 'EvaluationRun':
+    def make(cls, time_seconds: float, memory_bytes: int, calculated_tag_pose: Transform, expected_tag_pose: Transform) -> 'EvaluationRun':
         """
         Creates a new instance of ``EvaluationRun``.
         :param time_seconds: The time it took to run the case.
@@ -173,12 +173,12 @@ def evaluate(estimator: AprilTagPoseEstimator,
     return results
 
 
-def get_error(expected_pose: Pose, actual_pose: Pose) -> Tuple[Twist, float]:
+def get_error(expected_pose: Transform, actual_pose: Transform) -> Tuple[Twist, float]:
     """
     Returns the error between the expected and actual poses.
     :param expected_pose: The expected pose.
     :param actual_pose: The actual pose.
     :return: A twist representing the error and the magnitude of the error.
     """
-    error_pose_matrix = np.linalg.inv(expected_pose.get_matrix()) @ actual_pose.get_matrix()
-    return Pose.from_matrix(error_pose_matrix).log(), float(np.log(np.linalg.norm(error_pose_matrix) ** 2 / 4))
+    error_pose = expected_pose.inv() @ actual_pose
+    return error_pose.log(), float(np.log(np.linalg.norm(error_pose.matrix) ** 2 / 4))
