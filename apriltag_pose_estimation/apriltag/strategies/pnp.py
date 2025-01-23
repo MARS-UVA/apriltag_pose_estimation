@@ -61,4 +61,5 @@ class PerspectiveNPointStrategy(AprilTagPoseEstimationStrategy):
         ]) / 2 * tag_size
         image_points = detection.corners
 
-        return solve_pnp(object_points, image_points, camera_params, method=self.__method)
+        return solve_pnp(object_points, image_points, camera_params, method=self.__method,
+                         object_points_frame='tag_optical')

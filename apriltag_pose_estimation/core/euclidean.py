@@ -239,7 +239,7 @@ class Transform:
         if not isinstance(other, Transform):
             return NotImplemented
         if __debug__:
-            if (self.input_space is not None and self.output_space is not None
+            if (self.input_space is not None and other.output_space is not None
                     and other.output_space != self.input_space):
                 raise ValueError(f'T2 @ T1: T1 output space ({other.output_space}) does not match '
                                  f'T2 input space ({self.input_space})')
