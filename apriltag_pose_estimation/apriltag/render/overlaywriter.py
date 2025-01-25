@@ -56,6 +56,9 @@ class OverlayWriter:
         Overlay the square corresponding to each detected AprilTag on the image.
         :param thickness: The thickness of the lines for the square's edges (default: 2).
         :param color: The color of the square (default: blue).
+        :param show_corners: Whether to display the corner points of the square (default: ``False``).
+        :param corner_point_radius: The radius of the corner points of the square (default: 8). Has no effect if
+                                    ``show_corners`` is ``False``.
         """
         for detection in self.__detections:
             points = detection.corners.astype(np.int_)
@@ -84,8 +87,14 @@ class OverlayWriter:
         :param color: The color of the label (default: blue).
         """
         for detection in self.__detections:
-            cv2.putText(self.__image, label_func(detection), np.round(detection.center).astype(np.int_), int(font), scale,
-                        color.bgr(), thickness, cv2.LINE_AA)
+            cv2.putText(self.__image,
+                        label_func(detection),
+                        np.round(detection.center).astype(np.int_),
+                        int(font),
+                        scale,
+                        color.bgr(),
+                        thickness,
+                        cv2.LINE_AA)
 
     def overlay_axes(self,
                      axis_length: float = 0.5,

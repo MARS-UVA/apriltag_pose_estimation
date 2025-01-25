@@ -13,7 +13,12 @@ from ...core.field import AprilTagField
 
 class PoseEstimationStrategyTestCase:
 
-    def __init__(self, id_: int, actual_camera_pose: Transform, apriltag_field: AprilTagField, detected_apriltags: Collection[int], camera_params: CameraParameters):
+    def __init__(self,
+                 id_: int,
+                 actual_camera_pose: Transform,
+                 apriltag_field: AprilTagField,
+                 detected_apriltags: Collection[int],
+                 camera_params: CameraParameters):
         self.__id = id_
         self.__actual_camera_pose = actual_camera_pose
         self.__apriltag_field = apriltag_field
@@ -75,7 +80,9 @@ class PoseEstimationStrategyTestCase:
                 for tag_id in self.__detected_apriltags]
 
 
-def _project_points_onto_camera(points: npt.NDArray[np.float64], camera_params: CameraParameters, camera_in_origin: Transform) -> npt.NDArray[np.float64]:
+def _project_points_onto_camera(points: npt.NDArray[np.float64],
+                                camera_params: CameraParameters,
+                                camera_in_origin: Transform) -> npt.NDArray[np.float64]:
     origin_in_camera = camera_in_origin.inv()
     image_points, _ = cv2.projectPoints(points,
                                         origin_in_camera.opencv_rotation_vector,

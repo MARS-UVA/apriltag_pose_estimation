@@ -100,7 +100,7 @@ class Transform:
         :param ambiguity: The ambiguity associated with the transformation (optional).
         :return: A new ``Transform`` object.
         """
-        return cls(matrix=np.block([[rotation.as_matrix(), np.array(translation, dtype=np.float64).reshape(-1, 1)],
+        return cls(matrix=np.block([[rotation.as_matrix(), np.array(translation, dtype=np.float64).reshape(-1, 1)],  # type: ignore
                                     [np.zeros(shape=(1, 3)), 1]]),
                    input_space=input_space,
                    output_space=output_space,
@@ -262,7 +262,7 @@ class Transform:
 
         :return: The image of the logarithmic map applied to this transformation.
         """
-        return Twist.from_matrix(logm(self.matrix, disp=True))
+        return Twist.from_matrix(logm(self.matrix, disp=True))  # type: ignore
 
 
 @dataclass(frozen=True)
@@ -295,7 +295,9 @@ class Twist:
         return Twist(matrix[:3, :3], matrix[:3, 3].reshape(-1, 1))
 
     @classmethod
-    def from_vectors(cls, angular_velocity_vector: npt.NDArray[np.float64], linear_velocity_vector: npt.NDArray[np.float64]):
+    def from_vectors(cls,
+                     angular_velocity_vector: npt.NDArray[np.float64],
+                     linear_velocity_vector: npt.NDArray[np.float64]):
         """
         Returns a new Twist object constructed from an angular velocity vector and a linear velocity vector.
         :param angular_velocity_vector: A vector representing the angular velocity component of the twist in Euler angle
@@ -318,8 +320,9 @@ class Twist:
         A 3x1 vector representing the angular velocity component of the twist in Euler angle velocities, in order of
         [roll, pitch, yaw] in radians.
         """
-        return np.array([self.angular_velocity_matrix[2, 1], self.angular_velocity_matrix[0, 2], self.angular_velocity_matrix[1, 0]],
-                        dtype=np.float64).reshape(-1, 1)
+        return np.array(
+            [self.angular_velocity_matrix[2, 1], self.angular_velocity_matrix[0, 2], self.angular_velocity_matrix[1, 0]],
+            dtype=np.float64).reshape(-1, 1)
 
     def get_matrix(self) -> npt.NDArray[np.float64]:
         """
@@ -328,7 +331,7 @@ class Twist:
         The resulting matrix is an element of se(3).
         :return: The matrix representation of the twist.
         """
-        return np.block([[self.angular_velocity_matrix, self.angular_velocity_vector],
+        return np.block([[self.angular_velocity_matrix, self.angular_velocity_vector],  # type: ignore
                          [np.zeros((1, 4), dtype=np.float64)]])
 
     def __add__(self, other: 'Twist') -> 'Twist':

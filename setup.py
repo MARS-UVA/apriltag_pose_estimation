@@ -10,12 +10,20 @@ setup(
     packages=find_packages(include=[package_name, f'{package_name}.*'], exclude=['*.testcase']),
     install_requires=[
         'setuptools',
-        'numpy',
+        'numpy<2',
         'opencv-python',
-        'pupil-apriltags',
+        'pupil_apriltags',
         'scipy'
     ],
-    zip_safe=True,
+    extras_require={
+        'render': [
+            'meshio',
+            'pyvista',
+            'pyvistaqt',
+            'PyQt5'
+        ]
+    },
+    zip_safe=False,
     author='MARS @ UVA',
     description='A Python library for estimating the pose of AprilTags.'
 )

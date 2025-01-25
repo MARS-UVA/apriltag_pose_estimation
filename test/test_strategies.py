@@ -6,12 +6,11 @@ from typing import List
 
 import cv2
 import numpy as np
-import numpy.typing as npt
 import pytest
 from scipy.spatial.transform import Rotation
 
 from apriltag_pose_estimation.apriltag.render import OverlayWriter, WHITE
-from apriltag_pose_estimation.core import AprilTagDetection, AprilTagField, CameraParameters, Transform, PnPMethod
+from apriltag_pose_estimation.core import AprilTagField, CameraParameters, Transform, PnPMethod
 from apriltag_pose_estimation.localization import PoseEstimationStrategy
 from apriltag_pose_estimation.localization.strategies import (MultiTagPnPEstimationStrategy,
                                                               MultiTagSpecialEstimationStrategy,
@@ -97,7 +96,10 @@ def get_cases() -> List[PoseEstimationStrategyTestCase]:
         case_id += 1
         return case
 
-    def special_case(actual_camera_pose: Transform, apriltag_field: AprilTagField, detected_apriltags: Collection[int], camera_params: CameraParameters) -> PoseEstimationStrategyTestCase:
+    def special_case(actual_camera_pose: Transform,
+                     apriltag_field: AprilTagField,
+                     detected_apriltags: Collection[int],
+                     camera_params: CameraParameters) -> PoseEstimationStrategyTestCase:
         nonlocal case_id
         case = PoseEstimationStrategyTestCase(id_=case_id,
                                               actual_camera_pose=actual_camera_pose,
@@ -169,16 +171,32 @@ def strategy_tester(strategy: PoseEstimationStrategy, case: PoseEstimationStrate
     assert np.isclose(camera_in_origin.matrix, case.actual_camera_pose.matrix, atol=10 ** -2).all()
 
 
-@pytest.mark.parametrize('pnp_method,case', list(product(iter(PnPMethod), cases)))
-def test_lowest_ambiguity_strategy(pnp_method: PnPMethod, case: PoseEstimationStrategyTestCase):
+@pytest.mark.parametrize('pnp_method,case', list(product(
+    iter(PnPMethod),
+    cases
+)))
+def test_lowest_ambiguity_strategy(pnp_method: PnPMethod,
+                                   case: PoseEstimationStrategyTestCase):
     strategy_tester(LowestAmbiguityEstimationStrategy(pnp_method=pnp_method), case)
 
 
-@pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product((LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod), [PnPMethod.ITERATIVE, PnPMethod.SQPNP], cases)))
-def test_multitag_pnp_strategy(fallback_strategy: PoseEstimationStrategy, pnp_method: PnPMethod, case: PoseEstimationStrategyTestCase):
+@pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product(
+    (LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod),
+    [PnPMethod.ITERATIVE, PnPMethod.SQPNP],
+    cases
+)))
+def test_multitag_pnp_strategy(fallback_strategy: PoseEstimationStrategy,
+                               pnp_method: PnPMethod,
+                               case: PoseEstimationStrategyTestCase):
     strategy_tester(MultiTagPnPEstimationStrategy(fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)
 
 
-@pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product([LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod], iter(PnPMethod), cases)))
-def test_multitag_special_strategy(fallback_strategy: PoseEstimationStrategy, pnp_method: PnPMethod, case: PoseEstimationStrategyTestCase):
+@pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product(
+    [LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod],
+    iter(PnPMethod),
+    cases
+)))
+def test_multitag_special_strategy(fallback_strategy: PoseEstimationStrategy,
+                                   pnp_method: PnPMethod,
+                                   case: PoseEstimationStrategyTestCase):
     strategy_tester(MultiTagSpecialEstimationStrategy(angle_producer=lambda: case.actual_camera_pose.rotation, fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)

@@ -64,8 +64,10 @@ def solve_pnp(object_points: npt.NDArray[np.float64],
     :param image_points: A nx2 array of 2D points corresponding to positions of the tracked objects in the image.
     :param camera_params: Parameters of the camera used to take the image.
     :param method: The method by which to solve the Perspective-N-Point problem (default: ``PnPMethod.ITERATIVE``).
+    :param object_points_frame: The coordinate frame in which the object points are specified (default: None).
     :return: A list of all possible poses of the world origin in the camera frame, ordered from least to most
-             reprojection error.
+             reprojection error. The input space is the frame given by ``object_points_frame``, and the output space
+             is "camera_optical".
     :raise EstimationError: If an error occurs in solving the Perspective-N-Point problem.
     """
     try:

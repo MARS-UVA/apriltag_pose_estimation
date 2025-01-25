@@ -4,7 +4,7 @@ import numpy as np
 from numpy import typing as npt
 
 
-__all__ = ['CameraParameters']
+__all__ = ['CameraParameters', 'DEPSTECH_CAM_PARAMETERS', 'LOGITECH_CAM_PARAMETERS']
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,3 +57,26 @@ class CameraParameters:
     def get_distortion_vector(self) -> npt.NDArray[np.float32]:
         """Returns a distortion vector created from the camera parameters."""
         return np.array([self.k1, self.k2, self.p1, self.p2, self.k3], dtype=np.float32)
+
+
+DEPSTECH_CAM_PARAMETERS = CameraParameters(fx=1329.143348,
+                                           fy=1326.537785,
+                                           cx=945.392392,
+                                           cy=521.144703,
+                                           k1=-0.348650,
+                                           k2=0.098710,
+                                           p1=-0.000157,
+                                           p2=-0.001851,
+                                           k3=0.000000)
+"""Camera parameters for a Depstech webcam."""
+
+LOGITECH_CAM_PARAMETERS = CameraParameters(fx=1303.4858439074037,
+                                           fy=1313.7268166341282,
+                                           cx=953.0550046450967,
+                                           cy=487.428417101308,
+                                           k1=-0.04617273252027395,
+                                           k2=0.2753447226702122,
+                                           p1=-0.010067837101803492,
+                                           p2=-0.005296327017158184,
+                                           k3=-0.38168395944619604)
+"""Camera parameters for a Logitech C920 webcam."""

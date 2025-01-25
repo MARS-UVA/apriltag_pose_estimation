@@ -2,7 +2,6 @@ from collections.abc import Sequence, Callable
 from typing import Optional, List
 
 import numpy as np
-import numpy.typing as npt
 from scipy.spatial.transform import Rotation
 
 from ..estimation import PoseEstimationStrategy

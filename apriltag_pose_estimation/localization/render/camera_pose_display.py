@@ -1,68 +1,49 @@
-import json
 from importlib.resources import files
-from typing import TextIO, Optional
+from typing import Optional
 
-import cv2
-import numpy as np
-from PyQt5 import Qt
-import pyvista as pv
-from pyvistaqt import BackgroundPlotter
-from scipy.spatial.transform import Rotation
+try:
+    from PyQt5 import Qt
+    import pyvista as pv
+    from pyvistaqt import BackgroundPlotter
+except ImportError as e:
+    e.add_note('to use 3D rendering features, install this package with the "render" extra')
+    raise
 
-from apriltag_pose_estimation.apriltag.render import OverlayWriter
-from apriltag_pose_estimation.core import CameraParameters, PnPMethod
-from apriltag_pose_estimation.localization import PoseEstimator
-from apriltag_pose_estimation.localization.strategies import MultiTagPnPEstimationStrategy, \
-    LowestAmbiguityEstimationStrategy
-from apriltag_pose_estimation.core import Transform
-from apriltag_pose_estimation.core.field import AprilTagField
-from apriltag_pose_estimation.localization.render import resource
+from . import resource
+from ...core import Transform
+from ...core.field import AprilTagField
 
 
-DEPSTECH_CAM_PARAMETERS = CameraParameters(fx=1329.143348,
-                                           fy=1326.537785,
-                                           cx=945.392392,
-                                           cy=521.144703,
-                                           k1=-0.348650,
-                                           k2=0.098710,
-                                           p1=-0.000157,
-                                           p2=-0.001851,
-                                           k3=0.000000)
-"""Camera parameters for a Depstech webcam."""
+__all__ = ['CameraPoseDisplay']
 
 
-LOGITECH_CAM_PARAMETERS = CameraParameters(fx=1303.4858439074037,
-                                           fy=1313.7268166341282,
-                                           cx=953.0550046450967,
-                                           cy=487.428417101308,
-                                           k1=-0.04617273252027395,
-                                           k2=0.2753447226702122,
-                                           p1=-0.010067837101803492,
-                                           p2=-0.005296327017158184,
-                                           k3=-0.38168395944619604)
-"""Camera parameters for a Logitech C920 webcam."""
-
-
-FACETIME_CAM_PARAMETERS = CameraParameters(fx=954.0874994019651,
-                                           fy=949.9159862376827,
-                                           cx=660.572082940535,
-                                           cy=329.78814306885795,
-                                           k1=329.78814306885795,
-                                           k2=-0.13207581435883872,
-                                           p1=-0.000045055253893522236,
-                                           p2=-0.007745497656725853,
-                                           k3=0.11519181871308336)
-"""Camera parameters for a FaceTime HD camera."""
+PLANE_SCALE_FACTORS: dict[str, float] = {
+    'tag16h5': 8 / 6,
+    'tag25h9': 9 / 7,
+    'tag36h11': 10 / 8,
+    'tagCustom48h12': 10 / 6,
+    'tagStandard41h12': 9 / 5,
+    'tagStandard52h13': 10 / 6
+}
 
 
 class CameraPoseDisplay:
-    def __init__(self, field: AprilTagField):
-        plane_scale_factor = 9 / 5  # currently specific to the present tag standard
-        self.__plotter = BackgroundPlotter()
+    """
+    A class whose objects display the camera's current position in 3D space relative to the AprilTags on the field in
+    a Qt window.
+    """
+    def __init__(self, field: AprilTagField, **kwargs):
+        """
+        :param field: The field of AprilTags.
+        :param kwargs: Keyword arguments to pass to the underlying plotter (see :class:`BackgroundPlotter`).
+        """
+        self.__plotter = BackgroundPlotter(**kwargs)
         for tag_id, tag_pose in field.items():
             texture = (pv.read_texture(str(files(resource).joinpath(f'{tag_id}.png')))
                        .flip_x()
                        .flip_y())
+            plane_scale_factor = PLANE_SCALE_FACTORS.get(field.tag_family,
+                                                         texture.dimensions[0] / (texture.dimensions[0] - 2))
             mesh: pv.PolyData = pv.Plane(i_size=field.tag_size * plane_scale_factor,
                                          j_size=field.tag_size * plane_scale_factor)
             mesh.point_data.clear()
@@ -76,99 +57,44 @@ class CameraPoseDisplay:
         self.__camera_mesh_actor = self.__plotter.add_mesh(self.__displayed_camera_mesh)
         self.__camera_mesh_actor.SetVisibility(False)
 
-        self.__plotter.camera_position = 'xy'
-
     @property
     def plotter(self) -> BackgroundPlotter:
+        """The underlying PyVista plotter."""
         return self.__plotter
 
+    @property
+    def qt_application(self) -> Qt.QApplication:
+        """The underlying Qt application."""
+        return self.__plotter.app
+
+    @property
+    def qt_main_window(self) -> Qt.QMainWindow:
+        """The main window of the Qt application."""
+        return self.__plotter.main_window
+
+    def exec_application(self) -> int:
+        """
+        Executes the Qt application.
+
+        :return: A status code.
+        """
+        return self.qt_application.exec()
+
     def update(self, origin_in_camera: Optional[Transform] = None) -> None:
+        """
+        Updates the view in the camera display to reflect the new pose of the camera.
+
+        :param origin_in_camera: The pose of the world origin to the camera frame (optional). If not specified, the
+                                 plotter will be updated with no changes.
+        """
         if origin_in_camera is not None:
             self.__camera_mesh_actor.SetVisibility(True)
             camera_in_origin = origin_in_camera.inv()
-            self.__displayed_camera_mesh.deep_copy(self.__original_camera_mesh.transform(camera_in_origin.matrix.astype(float), inplace=False))
+            self.__displayed_camera_mesh.deep_copy(
+                self.__original_camera_mesh.transform(camera_in_origin.matrix.astype(float),  # type: ignore
+                                                      inplace=False))
         self.__plotter.update()
 
     def close(self) -> None:
+        """Closes the window displaying the camera pose."""
         self.__plotter.close()
-
-
-def get_field(fp: TextIO) -> AprilTagField:
-    field_dict = json.load(fp)
-    return AprilTagField(tag_size=field_dict['tag_size'],
-                         tag_family=field_dict['tag_family'],
-                         tag_positions={tag_data['id']: Transform.make(rotation=Rotation.from_rotvec(tag_data['rotation_vector']),
-                                                                       translation=tag_data['translation_vector'],
-                                                                       input_space='tag_optical',
-                                                                       output_space='world')
-                                        for tag_data in field_dict['fiducials']})
-
-
-def get_basic_field() -> AprilTagField:
-    optical_to_standard = Transform.from_matrix(np.array([[0, 0, 1, 0],
-                                                          [-1, 0, 0, 0],
-                                                          [0, -1, 0, 0],
-                                                          [0, 0, 0, 1]]),
-                                                input_space='world_optical',
-                                                output_space='world')
-    # Tag size is measured as the side length of the interior white square in meters
-    return AprilTagField(tag_size=0.080,
-                         tag_family='tagStandard41h12',
-                         tag_positions={
-                             0: optical_to_standard @ Transform.identity(input_space='tag_optical',
-                                                                         output_space='world_optical'),
-                             2: optical_to_standard @ Transform.make(rotation=Rotation.identity(),
-                                                                     translation=[-0.83, 0, 0],
-                                                                     input_space='tag_optical',
-                                                                     output_space='world_optical'),
-                          })
-
-
-def main() -> None:
-    def timer_callback() -> None:
-        not_closed, frame = video_capture.read()
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        result = estimator.estimate_pose(image)
-        if result.estimated_pose is not None:
-            display.update(result.estimated_pose)
-        overlay_writer = OverlayWriter(frame,
-                                       detections=result.detections,
-                                       camera_params=estimator.camera_params,
-                                       tag_size=estimator.field.tag_size)
-        overlay_writer.overlay_square(show_corners=True)
-        overlay_writer.overlay_label()
-        cv2.imshow('camera', frame)
-
-    with files(resource).joinpath('testfield.json').open(mode='r') as f:
-        field = get_field(f)
-
-    estimator = PoseEstimator(
-        strategy=MultiTagPnPEstimationStrategy(fallback_strategy=LowestAmbiguityEstimationStrategy()),
-        field=field,
-        camera_params=DEPSTECH_CAM_PARAMETERS,
-        nthreads=2,
-        quad_sigma=0,
-        refine_edges=1,
-        decode_sharpening=0.25
-    )
-
-    video_capture = cv2.VideoCapture(0)
-
-    cv2.namedWindow('camera')
-
-    display = CameraPoseDisplay(estimator.field)
-
-    timer = Qt.QTimer(display.plotter.app_window)
-    timer.setSingleShot(False)
-    timer.setInterval(1000 // 24)
-    timer.timeout.connect(timer_callback)
-    timer.start()
-
-    try:
-        display.plotter.app.exec()
-    finally:
-        cv2.destroyWindow('camera')
-
-
-if __name__ == '__main__':
-    main()

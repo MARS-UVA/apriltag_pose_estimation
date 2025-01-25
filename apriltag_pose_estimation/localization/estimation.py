@@ -1,6 +1,6 @@
 import abc
 from collections.abc import Sequence
-from typing import Optional, Dict
+from typing import Optional
 
 from ..core.camera import CameraParameters
 from ..core.detection import AprilTagDetection
