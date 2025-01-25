@@ -19,6 +19,18 @@ from apriltag_pose_estimation.core.field import AprilTagField
 from apriltag_pose_estimation.localization.render import resource
 
 
+DEPSTECH_CAM_PARAMETERS = CameraParameters(fx=1329.143348,
+                                           fy=1326.537785,
+                                           cx=945.392392,
+                                           cy=521.144703,
+                                           k1=-0.348650,
+                                           k2=0.098710,
+                                           p1=-0.000157,
+                                           p2=-0.001851,
+                                           k3=0.000000)
+"""Camera parameters for a Depstech webcam."""
+
+
 LOGITECH_CAM_PARAMETERS = CameraParameters(fx=1303.4858439074037,
                                            fy=1313.7268166341282,
                                            cx=953.0550046450967,
@@ -48,21 +60,21 @@ class CameraPoseDisplay:
         plane_scale_factor = 9 / 5  # currently specific to the present tag standard
         self.__plotter = BackgroundPlotter()
         for tag_id, tag_pose in field.items():
-            tag_pose_standard = tag_pose
-            texture = pv.read_texture(str(files(resource).joinpath(f'{tag_id}.png')))
-            mesh: pv.PolyData = pv.Plane(center=tag_pose_standard.translation,
-                                         direction=tag_pose_standard.rotation.as_matrix()[:, 2],
-                                         i_size=field.tag_size * plane_scale_factor,
+            texture = (pv.read_texture(str(files(resource).joinpath(f'{tag_id}.png')))
+                       .flip_x()
+                       .flip_y())
+            mesh: pv.PolyData = pv.Plane(i_size=field.tag_size * plane_scale_factor,
                                          j_size=field.tag_size * plane_scale_factor)
             mesh.point_data.clear()
             mesh.texture_map_to_plane(inplace=True)
+            mesh.transform(tag_pose.matrix.astype(float))
             self.__plotter.add_mesh(mesh, texture=texture)
         mesh_path = str(files(resource).joinpath('camera.stl'))
 
         self.__original_camera_mesh: pv.DataSet = pv.read_meshio(mesh_path)
         self.__displayed_camera_mesh: pv.DataSet = self.__original_camera_mesh.copy(deep=True)
         self.__camera_mesh_actor = self.__plotter.add_mesh(self.__displayed_camera_mesh)
-        self.__camera_mesh_actor.SetVisibility(True)
+        self.__camera_mesh_actor.SetVisibility(False)
 
         self.__plotter.camera_position = 'xy'
 
@@ -72,6 +84,7 @@ class CameraPoseDisplay:
 
     def update(self, origin_in_camera: Optional[Transform] = None) -> None:
         if origin_in_camera is not None:
+            self.__camera_mesh_actor.SetVisibility(True)
             camera_in_origin = origin_in_camera.inv()
             self.__displayed_camera_mesh.deep_copy(self.__original_camera_mesh.transform(camera_in_origin.matrix.astype(float), inplace=False))
         self.__plotter.update()
@@ -126,17 +139,20 @@ def main() -> None:
         overlay_writer.overlay_label()
         cv2.imshow('camera', frame)
 
+    with files(resource).joinpath('testfield.json').open(mode='r') as f:
+        field = get_field(f)
+
     estimator = PoseEstimator(
         strategy=MultiTagPnPEstimationStrategy(fallback_strategy=LowestAmbiguityEstimationStrategy()),
-        field=get_basic_field(),
-        camera_params=LOGITECH_CAM_PARAMETERS,
+        field=field,
+        camera_params=DEPSTECH_CAM_PARAMETERS,
         nthreads=2,
         quad_sigma=0,
         refine_edges=1,
         decode_sharpening=0.25
     )
 
-    video_capture = cv2.VideoCapture(1)
+    video_capture = cv2.VideoCapture(0)
 
     cv2.namedWindow('camera')
 
