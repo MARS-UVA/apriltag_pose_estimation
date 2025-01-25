@@ -65,7 +65,7 @@ class PoseEstimationStrategyTestCase:
                                   tag_family=self.__apriltag_field.tag_family,
                                   center=_project_points_onto_camera(self.__apriltag_field[tag_id].opencv_translation_vector,
                                                                      camera_params=self.__camera_params,
-                                                                     camera_in_origin=self.__actual_camera_pose),
+                                                                     camera_in_origin=self.__actual_camera_pose)[0],
                                   corners=_project_points_onto_camera(self.__apriltag_field.get_corners(tag_id),
                                                                       camera_params=self.__camera_params,
                                                                       camera_in_origin=self.__actual_camera_pose),

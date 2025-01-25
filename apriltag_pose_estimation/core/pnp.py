@@ -68,11 +68,14 @@ def solve_pnp(object_points: npt.NDArray[np.float64],
              reprojection error.
     :raise EstimationError: If an error occurs in solving the Perspective-N-Point problem.
     """
-    success, rotation_vectors, translations, errors = cv2.solvePnPGeneric(object_points,
-                                                                          image_points,
-                                                                          camera_params.get_matrix(),
-                                                                          camera_params.get_distortion_vector(),
-                                                                          flags=int(method))
+    try:
+        success, rotation_vectors, translations, errors = cv2.solvePnPGeneric(object_points,
+                                                                              image_points,
+                                                                              camera_params.get_matrix(),
+                                                                              camera_params.get_distortion_vector(),
+                                                                              flags=int(method))
+    except cv2.error as e:
+        raise EstimationError('Failed to solve') from e
 
     if not success:
         raise EstimationError('Failed to solve')

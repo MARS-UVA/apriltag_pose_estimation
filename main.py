@@ -174,6 +174,7 @@ def processor_process(poses_queue: mp.Queue,
                     image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
                     overlay_writer = OverlayWriter(image, estimates, camera_params, tag_size=tag_size)
                     overlay_writer.overlay_cubes()
+                    overlay_writer.overlay_label()
                 cv2.imshow('Capture', image)
                 key = cv2.waitKey(frame_delay)
                 try:

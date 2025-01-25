@@ -82,7 +82,6 @@ class Transform:
                    error=error,
                    ambiguity=ambiguity)
 
-
     @classmethod
     def make(cls,
              rotation: Rotation,
@@ -279,9 +278,11 @@ class Twist:
 
     def __post_init__(self):
         if self.angular_velocity_matrix.shape != (3, 3):
-            raise ValueError(f'expected shape (3, 3) for angular velocity matrix, got {self.angular_velocity_matrix.shape}')
+            raise ValueError(f'expected shape (3, 3) for angular velocity matrix, '
+                             f'got {self.angular_velocity_matrix.shape}')
         if self.linear_velocity_vector.shape != (3, 1):
-            raise ValueError(f'expected shape (3, 1) for linear velocity vector, got {self.linear_velocity_vector.shape}')
+            raise ValueError(f'expected shape (3, 1) for linear velocity vector, '
+                             f'got {self.linear_velocity_vector.shape}')
 
     @classmethod
     def from_matrix(cls, matrix: npt.NDArray[np.float64]) -> 'Twist':
