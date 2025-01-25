@@ -50,7 +50,8 @@ class OverlayWriter:
         self.__camera_params = camera_params
         self.__tag_size = tag_size
 
-    def overlay_square(self, thickness: int = 2, color: Color = BLUE) -> None:
+    def overlay_square(self, thickness: int = 2, color: Color = BLUE, show_corners: bool = False,
+                       corner_point_radius: int = 8) -> None:
         """
         Overlay the square corresponding to each detected AprilTag on the image.
         :param thickness: The thickness of the lines for the square's edges (default: 2).
@@ -60,6 +61,12 @@ class OverlayWriter:
             points = detection.corners.astype(np.int_)
             for src, dest in zip(points[:4], chain(points[1:4], points[:1])):
                 cv2.line(self.__image, src, dest, color=color.bgr(), thickness=thickness)
+            if show_corners:
+                for point, pt_color in zip(points, [Color(red=0x00, green=0x00, blue=0xff),
+                                                    Color(red=0xff, green=0x00, blue=0x80),
+                                                    Color(red=0xff, green=0xff, blue=0x00),
+                                                    Color(red=0x00, green=0xff, blue=0x7f)]):
+                    cv2.circle(self.__image, point, corner_point_radius, color=pt_color.bgr(), thickness=-1)
 
     def overlay_label(self,
                       label_func: Callable[[AprilTagDetection], str] = _default_label_func,
@@ -76,12 +83,8 @@ class OverlayWriter:
         :param thickness: The thickness of the label (default: 2).
         :param color: The color of the label (default: blue).
         """
-        object_points = np.array([[
-            [0, 0, 0]
-        ]]) / 2 * self.__tag_size
         for detection in self.__detections:
-            projected_points = self.__project(object_points, detection.best_tag_pose)
-            cv2.putText(self.__image, label_func(detection), projected_points[0], int(font), scale,
+            cv2.putText(self.__image, label_func(detection), np.round(detection.center).astype(np.int_), int(font), scale,
                         color.bgr(), thickness, cv2.LINE_AA)
 
     def overlay_axes(self,
