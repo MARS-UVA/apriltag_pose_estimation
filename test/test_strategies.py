@@ -10,7 +10,7 @@ import numpy.typing as npt
 import pytest
 from scipy.spatial.transform import Rotation
 
-from apriltag_pose_estimation.apriltag.render import OverlayWriter
+from apriltag_pose_estimation.apriltag.render import OverlayWriter, WHITE
 from apriltag_pose_estimation.core import AprilTagDetection, AprilTagField, CameraParameters, Transform, PnPMethod
 from apriltag_pose_estimation.localization import PoseEstimationStrategy
 from apriltag_pose_estimation.localization.strategies import (MultiTagPnPEstimationStrategy,
@@ -30,6 +30,18 @@ DEPSTECH_CAM_PARAMETERS = CameraParameters(fx=1329.143348,
                                            p1=-0.000157,
                                            p2=-0.001851,
                                            k3=0.000000)
+
+
+LOGITECH_CAM_PARAMETERS = CameraParameters(fx=1394.6027293299926,
+                                           fy=1394.6027293299926,
+                                           cx=995.588675691456,
+                                           cy=599.3212928484164,
+                                           k1=0.11480806073904032,
+                                           k2=-0.21946985653851792,
+                                           p1=0.0012002116999769957,
+                                           p2=0.008564577708855225,
+                                           k3=0.11274677130853494)
+"""Camera parameters for a Logitech C920 webcam."""
 
 
 # Note: the AprilTag field was taken from Limelight's model of the FRC 2024 game field.
@@ -76,10 +88,27 @@ def get_cases() -> List[PoseEstimationStrategyTestCase]:
                                               apriltag_field=field,
                                               detected_apriltags=detected_apriltags,
                                               camera_params=DEPSTECH_CAM_PARAMETERS)
-        image = np.zeros(shape=(1080, 1920), dtype=np.uint8)
+        image = np.zeros(shape=(1080, 1920, 3), dtype=np.uint8)
         overlay_writer = OverlayWriter(image, detections=case.detections, camera_params=case.camera_params,
                                        tag_size=case.apriltag_field.tag_size)
-        overlay_writer.overlay_square()
+        overlay_writer.overlay_square(color=WHITE, show_corners=True)
+        overlay_writer.overlay_label(color=WHITE)
+        cv2.imwrite(f'case{case_id}.png', image)
+        case_id += 1
+        return case
+
+    def special_case(actual_camera_pose: Transform, apriltag_field: AprilTagField, detected_apriltags: Collection[int], camera_params: CameraParameters) -> PoseEstimationStrategyTestCase:
+        nonlocal case_id
+        case = PoseEstimationStrategyTestCase(id_=case_id,
+                                              actual_camera_pose=actual_camera_pose,
+                                              apriltag_field=apriltag_field,
+                                              detected_apriltags=detected_apriltags,
+                                              camera_params=camera_params)
+        image = np.zeros(shape=(1080, 1920, 3), dtype=np.uint8)
+        overlay_writer = OverlayWriter(image, detections=case.detections, camera_params=case.camera_params,
+                                       tag_size=case.apriltag_field.tag_size)
+        overlay_writer.overlay_square(show_corners=True)
+        overlay_writer.overlay_label(color=WHITE)
         cv2.imwrite(f'case{case_id}.png', image)
         case_id += 1
         return case
@@ -92,6 +121,12 @@ def get_cases() -> List[PoseEstimationStrategyTestCase]:
                                      translation=[0.304, -0.127, 0.237],
                                      input_space='camera_standard',
                                      output_space='robot_standard')
+    axis_change = Transform.from_matrix(np.array([[0, 0, 1, 0],
+                                                  [-1, 0, 0, 0],
+                                                  [0, -1, 0, 0],
+                                                  [0, 0, 0, 1]]),
+                                        input_space='world_optical',
+                                        output_space='world')
     return [
         case(actual_camera_pose=camera_pose(3.5, 0, 5),
              detected_apriltags=[3, 4]),
@@ -100,7 +135,24 @@ def get_cases() -> List[PoseEstimationStrategyTestCase]:
         case(actual_camera_pose=camera_pose(6.5, 2.5, 90),
              detected_apriltags=[5]),
         case(actual_camera_pose=camera_pose(6.5, -2, -60),
-             detected_apriltags=[1, 2])
+             detected_apriltags=[1, 2]),
+        special_case(actual_camera_pose=Transform.make(rotation=Rotation.from_rotvec([-90, 0, 0], degrees=True)
+                                                                * Rotation.from_rotvec([0, -90, 0], degrees=True),
+                                                       translation=[2.5, 0.8, -0.3],
+                                                       input_space='camera_optical',
+                                                       output_space='world_optical'),
+                     apriltag_field=AprilTagField(tag_size=0.080,
+                                                  tag_family='tagStandard41h12',
+                                                  tag_positions={
+                                                      0: axis_change @ Transform.identity(input_space='tag_optical',
+                                                                                          output_space='world_optical'),
+                                                      2: axis_change @ Transform.make(rotation=Rotation.identity(),
+                                                                                      translation=[-0.835, 0, 0],
+                                                                                      input_space='tag_optical',
+                                                                                      output_space='world_optical'),
+                                                   }),
+                     detected_apriltags=[0, 2],
+                     camera_params=LOGITECH_CAM_PARAMETERS)
     ]
 
 
