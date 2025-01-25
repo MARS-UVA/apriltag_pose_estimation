@@ -10,7 +10,7 @@ setup(
     packages=find_packages(include=[package_name, f'{package_name}.*'], exclude=['*.testcase']),
     install_requires=[
         'setuptools',
-        'numpy<2',
+        'numpy',
         'opencv-python',
         'pupil_apriltags',
         'scipy'
