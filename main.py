@@ -4,11 +4,9 @@ import cv2
 from PyQt5 import Qt
 
 from apriltag_pose_estimation.apriltag.render import OverlayWriter
-from apriltag_pose_estimation.core import load_field
-from apriltag_pose_estimation.core.camera import DEPSTECH_CAM_PARAMETERS
+from apriltag_pose_estimation.core import DEPSTECH_CAM_PARAMETERS, load_field
 from apriltag_pose_estimation.localization import PoseEstimator
-from apriltag_pose_estimation.localization.render import resource
-from apriltag_pose_estimation.localization.render.camera_pose_display import CameraPoseDisplay
+from apriltag_pose_estimation.localization.render import CameraPoseDisplay, resource
 from apriltag_pose_estimation.localization.strategies import MultiTagPnPEstimationStrategy, \
     LowestAmbiguityEstimationStrategy
 
