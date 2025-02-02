@@ -25,5 +25,5 @@ setup(
     },
     zip_safe=False,
     author='MARS @ UVA',
-    description='A Python library for estimating the pose of AprilTags.'
+    description='A Python library for pose estimation using AprilTags.'
 )
