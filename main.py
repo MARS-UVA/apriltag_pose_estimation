@@ -53,7 +53,7 @@ def main() -> None:
     timer.start()
 
     try:
-        display.plotter.app.exec()
+        display.exec_application()
     finally:
         cv2.destroyWindow('camera')
 

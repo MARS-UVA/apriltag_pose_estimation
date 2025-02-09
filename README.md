@@ -89,3 +89,25 @@ image = # ...image...
 result = estimator.estimate_pose(image)
 print(result.estimated_pose)
 ```
+
+## Rendering camera position
+
+It can be useful for troubleshooting to see where the camera is in space. For this reason, we provide a `render`
+subpackage which renders the current camera position in a Qt window.
+
+Create a `CameraPoseDisplay` and initialize with an `AprilTagField`:
+
+```python
+from apriltag_pose_estimation.localization.render import CameraPoseDisplay
+
+display = CameraPoseDisplay(field)
+```
+
+When a new camera pose is found, update the display:
+
+```python
+display.update(estimated_pose)
+```
+
+You may need to execute the application, which can be done with `display.exec_application()`. In this case, you'll need
+to update the display asynchronously, such as with a `QTimer`.
