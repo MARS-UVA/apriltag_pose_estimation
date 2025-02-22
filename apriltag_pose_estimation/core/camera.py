@@ -80,3 +80,14 @@ LOGITECH_CAM_PARAMETERS = CameraParameters(fx=1303.4858439074037,
                                            p2=-0.005296327017158184,
                                            k3=-0.38168395944619604)
 """Camera parameters for a Logitech C920 webcam."""
+
+IPHONE_13_MINI_MAIN_CAM_PARAMETERS = CameraParameters(fx=975.0944324169702,
+                                                      fy=975.7210449202735,
+                                                      cx=651.2516360655774,
+                                                      cy=354.20133381181955,
+                                                      k1=0.16202747407118365,
+                                                      k2=-0.8339518338379913,
+                                                      p1=-0.0021712184519895234,
+                                                      p2=0.003869488985826069,
+                                                      k3=1.326544376051906)
+"""Camera parameters for the iPhone 13 mini's main back camera."""
