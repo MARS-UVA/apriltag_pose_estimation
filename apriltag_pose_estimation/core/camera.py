@@ -4,7 +4,10 @@ import numpy as np
 from numpy import typing as npt
 
 
-__all__ = ['CameraParameters', 'DEPSTECH_CAM_PARAMETERS', 'LOGITECH_CAM_PARAMETERS']
+__all__ = ['CameraParameters',
+           'DEPSTECH_CAM_PARAMETERS',
+           'LOGITECH_CAM_PARAMETERS',
+           'IPHONE_13_MINI_MAIN_CAM_PARAMETERS']
 
 
 @dataclass(frozen=True, kw_only=True)
