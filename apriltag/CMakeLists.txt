@@ -5,7 +5,7 @@ if(POLICY CMP0077)
     cmake_policy(SET CMP0077 NEW)
 endif()
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
-option(BUILD_EXAMPLES "Build example executables" ON)
+option(BUILD_EXAMPLES "Build example executables" OFF)
 option(ASAN "Use AddressSanitizer for debug builds to detect memory issues" OFF)
 
 if (ASAN)
@@ -160,7 +160,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
 
 
 # Python wrapper
-option(BUILD_PYTHON_WRAPPER "Builds Python wrapper" ON)
+option(BUILD_PYTHON_WRAPPER "Builds Python wrapper" OFF)
 
 find_package(Python3 QUIET COMPONENTS Development NumPy)
 
