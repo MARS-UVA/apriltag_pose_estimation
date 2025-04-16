@@ -7,7 +7,8 @@ from numpy import typing as npt
 __all__ = ['CameraParameters',
            'DEPSTECH_CAM_PARAMETERS',
            'LOGITECH_CAM_PARAMETERS',
-           'IPHONE_13_MINI_MAIN_CAM_PARAMETERS']
+           'IPHONE_13_MINI_MAIN_CAM_PARAMETERS',
+           'ARDUCAM_OV9281_PARAMETERS']
 
 
 @dataclass(frozen=True, kw_only=True)
