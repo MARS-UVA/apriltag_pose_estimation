@@ -4,7 +4,8 @@ import cv2
 from PyQt5 import Qt
 
 from apriltag_pose_estimation.apriltag.render import OverlayWriter
-from apriltag_pose_estimation.core import IPHONE_13_MINI_MAIN_CAM_PARAMETERS, load_field
+from apriltag_pose_estimation.core import IPHONE_13_MINI_MAIN_CAM_PARAMETERS, load_field, AprilTagField, Transform, \
+    ARDUCAM_OV9281_PARAMETERS
 from apriltag_pose_estimation.localization import PoseEstimator
 from apriltag_pose_estimation.localization.render import CameraPoseDisplay, resource
 from apriltag_pose_estimation.localization.strategies import MultiTagPnPEstimationStrategy, \
@@ -15,8 +16,6 @@ def main() -> None:
     def timer_callback() -> None:
         not_closed, frame = video_capture.read()
         if not not_closed:
-            timer.stop()
-            display.qt_application.quit()
             return
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         result = estimator.estimate_pose(image)
@@ -30,13 +29,13 @@ def main() -> None:
         overlay_writer.overlay_label()
         cv2.imshow('camera', frame)
 
-    with files(resource).joinpath('testfield2.json').open(mode='r') as f:
+    with files(resource).joinpath('testfield.json').open(mode='r') as f:
         field = load_field(f)
 
     estimator = PoseEstimator(
         strategy=MultiTagPnPEstimationStrategy(fallback_strategy=LowestAmbiguityEstimationStrategy()),
         field=field,
-        camera_params=IPHONE_13_MINI_MAIN_CAM_PARAMETERS,
+        camera_params=ARDUCAM_OV9281_PARAMETERS,
         nthreads=2,
         quad_sigma=0,
         refine_edges=True,
@@ -44,11 +43,11 @@ def main() -> None:
         search_paths='.',  # This isn't necessary if the library is installed via pip
     )
 
-    video_capture = cv2.VideoCapture('/Users/ivan/Downloads/video_20250312_120532.mov')
+    video_capture = cv2.VideoCapture(0)
 
     cv2.namedWindow('camera')
 
-    display = CameraPoseDisplay(estimator.field)
+    display = CameraPoseDisplay(estimator.field, search_paths='.')
 
     timer = Qt.QTimer(display.plotter.app_window)
     timer.setSingleShot(False)
