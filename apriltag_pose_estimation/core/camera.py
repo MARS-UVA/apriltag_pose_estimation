@@ -1,3 +1,12 @@
+"""
+This module provides the :py:class:`CameraParameters` class for representing lens distortion, as well as instances for
+cameras that the MARS team uses for testing purposes.
+
+Avoid using the built-in instances, since calibrating your camera yourself will be more accurate. The
+:py:mod:`apriltag_pose_estimation.calibrate` provides a tool for calibrating your camera.
+"""
+
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -13,7 +22,15 @@ __all__ = ['CameraParameters',
 
 @dataclass(frozen=True, kw_only=True)
 class CameraParameters:
-    """Parameters that represent characteristic information of a camera."""
+    """
+    Parameters that represent characteristic information of a camera.
+
+    When a camera is calibrated with the :py:mod:`apriltag_pose_estimation.calibrate` tool, OpenCV's calibration
+    API, or similar tools, a set of camera parameters which describe the distortion of the camera is returned. These
+    parameters are necessary for performing 3D tracking.
+
+    This is a frozen dataclass, so its instances are immutable.
+    """
     fx: float
     """Focal length in the x direction."""
     fy: float
@@ -34,8 +51,29 @@ class CameraParameters:
     """Third parameter of radial distortion."""
 
     @classmethod
-    def from_matrices(cls, camera_matrix: npt.NDArray[np.float64], distortion_vector: npt.NDArray[np.float64]):
-        """Create a CameraParameters object from a camera matrix and distortion vector."""
+    def from_matrices(cls, camera_matrix: npt.NDArray[np.float_], distortion_vector: npt.NDArray[np.float_]):
+        """
+        Create a CameraParameters object from a camera matrix and distortion vector.
+
+        This method is useful for converting results from an OpenCV calibration to a CameraParameters object. The
+        expected order of values in the camera is::
+
+           | fx  0 cx |
+           |  0 fy cy |
+           |  0  0  1 |
+
+        And the expected order of values in the distortion vector is::
+
+           | k1 k2 p1 p2 k3 |
+
+        This matches the matrices returned by OpenCV's ``calibrateCamera()`` function.
+
+        :param camera_matrix: The intrinsic camera matrix for the camera, likely returned from OpenCV's
+           ``calibrateCamera()`` function.
+        :param distortion_vector: The distortion vector for the camera, likely returned from OpenCV's
+           ``calibrateCamera()`` function.
+        :return: A new CameraParameters object representing the camera's distortion.
+        """
         return cls(
             fx=float(camera_matrix[0, 0]),
             fy=float(camera_matrix[1, 1]),
@@ -49,7 +87,15 @@ class CameraParameters:
         )
 
     def get_matrix(self) -> npt.NDArray[np.float32]:
-        """Returns a camera matrix created from the camera parameters."""
+        """
+        Returns a camera matrix created from the camera parameters.
+
+        The returned matrix has the following format::
+
+           | fx  0 cx |
+           |  0 fy cy |
+           |  0  0  1 |
+        """
         camera_matrix = np.zeros((3, 3), dtype=np.float32)
         camera_matrix[0, 0] = self.fx
         camera_matrix[1, 1] = self.fy
@@ -59,7 +105,13 @@ class CameraParameters:
         return camera_matrix
 
     def get_distortion_vector(self) -> npt.NDArray[np.float32]:
-        """Returns a distortion vector created from the camera parameters."""
+        """
+        Returns a distortion vector created from the camera parameters.
+
+        The returned vector has the following format::
+
+           | k1 k2 p1 p2 k3 |
+        """
         return np.array([self.k1, self.k2, self.p1, self.p2, self.k3], dtype=np.float32)
 
 
