@@ -4,6 +4,9 @@ This module contains bindings for the C AprilTag 3 library.
 It includes structure types for several important C AprilTag structs and convenience classes for accessing the AprilTag
 C library and creating family objects.
 
+Generally, you will not need to access objects defined in this library directly except possibly for
+:py:class:`AprilTagFamily`.
+
 Original author: Isaac Dulin, Spring 2016
 Updates: Matt Zucker, Fall 2016
 Apriltags 3 version: Aleksandar Petrov, Spring 2019
@@ -324,7 +327,7 @@ class AprilTagLibrary:
         Gets the AprilTag shared library.
 
         :param search_paths: Paths to search for the library.
-        :return: A :class:`ctypes.CDLL` instance.
+        :return: A :py:class:`~ctypes.CDLL` instance.
         """
         filename_patterns_by_platform = {
             'Darwin': 'libapriltag*.dylib',
@@ -336,7 +339,8 @@ class AprilTagLibrary:
         possible_hits: Iterator[Path] = chain.from_iterable(
             Path(path).glob(filename_pattern) for path in search_paths
         )
-        stack = ExitStack()
+        # noinspection PyAbstractClass
+        stack = ExitStack()  # This class has no abstract methods and is thus initializable
         for hit in possible_hits:
             with stack:
                 if platform.system() == 'Windows':

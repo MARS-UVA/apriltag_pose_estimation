@@ -1,3 +1,16 @@
+"""
+Types representing mathematically useful objects in Euclidean space.
+
+In rigid-body mechanics, we often use a Lie group called :math:`\mathrm{E}(3)` (or often more specifically
+:math:`\mathrm{SE}(3)`). Elements of the Lie group represent a position and rotation in 3D Euclidean space. We call
+these *Euclidean transformations*, and we represent them with teh  to and this project uses the :py:class:`Transform`
+dataclass to represent them.
+
+Every Lie group has a corresponding Lie algebra, which could be thought of as the space of possible velocities from
+any position and rotation in the Lie group. They each hold a linear and angular velocity which is resolved through a
+screw-like motion, and this project uses the :py:class:`Twist` dataclass to represent them.
+"""
+
 from dataclasses import dataclass
 from typing import Optional
 
@@ -14,7 +27,7 @@ __all__ = ['Transform', 'Twist']
 @dataclass(frozen=True)
 class Transform:
     """
-    An object representing a Euclidean transformation in 3D (an element of the Lie group E(3)).
+    An object representing a Euclidean transformation in 3D (an element of the Lie group :mathE(3)).
 
     The group operation is assigned to the matrix multiplication operator ``@``.
 
@@ -27,12 +40,12 @@ class Transform:
     matrix: npt.NDArray[np.float64]
     """
     A 4x4 matrix which represents the transformation.
-    
+
     The 3x3 leading principal submatrix describes the rotation associated with this transformation. The 3x1 vector
     consisting of the first three rows of the last column describes the translation associated with the transformation.
     The bottom right entry is always 1, and the other entries in the last row are always 0.
-    
-    This representation was chosen because this is the matrix representation of the Lie group E(3).
+
+    This representation was chosen because this is the matrix representation of the Lie group :math:`\mathrm{E}(3)`.
     """
 
     input_space: Optional[str] = None
@@ -46,7 +59,7 @@ class Transform:
     ambiguity: Optional[float] = None
     """
     An ambiguity associated with the transformation, if any.
-    
+
     Ambiguity is calculated during localization as the ratio of reprojection errors from the best to second-best
     candidate transformations.
     """
@@ -269,7 +282,10 @@ class Transform:
 class Twist:
     """
     An object representing the combined angular and linear velocity of an object in 3D Euclidean space (an element of
-    se(3)).
+    :math:`\mathrm{se}(3)`).
+
+    The way an object in Euclidean space moves with a constant twist applied is in a screw-like motion since the twist
+    is always applied relative to the object's pose in the space.
     """
     angular_velocity_matrix: npt.NDArray[np.float64]
     """A 3x3 float64 antisymmetric matrix which is the angular velocity component of the twist."""
@@ -287,8 +303,8 @@ class Twist:
     @classmethod
     def from_matrix(cls, matrix: npt.NDArray[np.float64]) -> 'Twist':
         """
-        Returns a new Twist object constructed from the given matrix representing an element of se(3).
-        :param matrix: The matrix, an element of se(3).
+        Returns a new Twist object constructed from the given matrix representing an element of :math:`\mathrm{se}(3)`.
+        :param matrix: The matrix, an element of :math:`\mathrm{se}(3)`.
         :return: A new Twist object constructed from the given matrix.
         """
         matrix = matrix.astype(np.float64)
@@ -328,7 +344,7 @@ class Twist:
         """
         Returns a 4x4 matrix representation of the twist.
 
-        The resulting matrix is an element of se(3).
+        The resulting matrix is an element of :math:`\mathrm{se}(3)`.
         :return: The matrix representation of the twist.
         """
         return np.block([[self.angular_velocity_matrix, self.angular_velocity_vector],  # type: ignore

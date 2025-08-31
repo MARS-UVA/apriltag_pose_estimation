@@ -53,9 +53,9 @@ class CameraParameters:
     @classmethod
     def from_matrices(cls, camera_matrix: npt.NDArray[np.float_], distortion_vector: npt.NDArray[np.float_]):
         """
-        Create a CameraParameters object from a camera matrix and distortion vector.
+        Create a ``CameraParameters`` object from a camera matrix and distortion vector.
 
-        This method is useful for converting results from an OpenCV calibration to a CameraParameters object. The
+        This method is useful for converting results from an OpenCV calibration to a ``CameraParameters`` object. The
         expected order of values in the camera is::
 
            | fx  0 cx |

@@ -1,3 +1,6 @@
+"""Operations for loading and representing 3D fields with AprilTags."""
+
+
 import json
 from collections.abc import Mapping
 from typing import Dict, List, Optional, TextIO

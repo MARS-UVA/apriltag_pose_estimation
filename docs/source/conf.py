@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'apriltag_pose_estimation'
-copyright = '2025, Mechatronics and Robotics Society @ UVA'
+copyright = '%Y, Mechatronics and Robotics Society @ UVA'
 author = 'Mechatronics and Robotics Society @ UVA'
 release = '0.1.0'
 
@@ -16,12 +16,15 @@ release = '0.1.0'
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary'
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
-
+# -- Autodoc configuration ---------------------------------------------------
+autodoc_member_order = 'groupwise'
+autosummary_generate = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

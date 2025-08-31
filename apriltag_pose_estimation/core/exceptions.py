@@ -1,3 +1,6 @@
+"""Custom exceptions for ``apriltag_pose_estimation``."""
+
+
 __all__ = ['EstimationError']
 
 

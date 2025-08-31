@@ -14,10 +14,12 @@ Add your content using ``reStructuredText`` syntax. See the
 documentation for details.
 
 
-.. automodule:: apriltag_pose_estimation.core.camera
-   :members:
+.. autosummary::
+
+   apriltag_pose_estimation.core.camera
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   genindex

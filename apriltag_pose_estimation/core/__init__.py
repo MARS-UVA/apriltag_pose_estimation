@@ -1,3 +1,6 @@
+"""Core functionality for ``apriltag_pose_estimation``."""
+
+
 from .camera import *
 from .detection import *
 from .euclidean import *

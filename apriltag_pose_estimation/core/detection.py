@@ -1,3 +1,11 @@
+"""
+Provides types for detecting AprilTags.
+
+For example:
+
+
+"""
+
 import ctypes
 import logging
 import os
@@ -16,7 +24,11 @@ from .bindings import (apriltag_detector, zarray, apriltag_detection, zarray_get
 from .euclidean import Transform
 
 
-__all__ = ['AprilTagDetection', 'AprilTagDetector']
+__all__ = [
+    'AprilTagDetection',
+    'AprilTagDetector',
+    'AprilTagDetectorParams'
+]
 
 
 logger = logging.getLogger(__name__)
@@ -24,28 +36,39 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class AprilTagDetection:
-    """A detection of an AprilTag."""
+    """Data and metadata about a detected AprilTag."""
 
     tag_id: int
     """The ID of the tag which was detected."""
+
     tag_family: str
     """The family of the tag which was detected."""
+
     center: npt.NDArray[np.float64]
     """The location of the center of the detected tag in the image."""
+
     corners: npt.NDArray[np.float64]
     """
     The location of the corners of the detected tag in the image.
-    
+
     The corners are provided in the order of (-1, 1), (1, 1), (1, -1), (-1, -1). It should be noted that this is the
     order OpenCV's solvePnP function uses under the IPPE square mode, *not* the convention used by the
     C AprilTag library.
     """
+
     decision_margin: float
     """A measure of the quality of the binary decoding process. Higher numbers roughly indicate better decodes."""
+
     hamming: int
     """The number of error bits which were corrected."""
+
     tag_poses: Optional[List[Transform]] = None
-    """Possible poses of the tag in the camera's coordinate frame, in order from best to worst."""
+    """
+    Possible poses of the tag in the camera's coordinate frame, in order from best to worst.
+
+    Tag poses are calculated using the orthogonal iteration method. The "best" tag pose is the one with the least
+    object-space error. See libapriltag's ``estimate_tag_pose()`` for more details.
+    """
 
     def __post_init__(self):
         if self.tag_poses is not None and not self.tag_poses:
@@ -53,19 +76,44 @@ class AprilTagDetection:
 
     @property
     def best_tag_pose(self) -> Optional[Transform]:
-        """The best tag pose calculated."""
+        """
+        The best tag pose calculated.
+
+        When :py:attr:`tag_poses` is not ``None``, this is equivalent to getting the first element of
+        :py:attr:`tag_poses`. If :py:attr:`tag_poses` is ``None``, then this also returns ``None``.
+        """
         return self.tag_poses[0] if self.tag_poses is not None else None
 
 
 class AprilTagDetectorParams(TypedDict):
+    """Type for parameters passed to the constructor of :py:class:`AprilTagDetector`."""
+
     families: NotRequired[AprilTagFamilyId | Sequence[AprilTagFamilyId]]
+    """Name or sequence of names of AprilTag families the detector will detect."""
+
     nthreads: NotRequired[int]
+    """Number of threads on which AprilTag detection is running."""
+
     quad_decimate: NotRequired[float]
+    """Amount by which to decimate the image."""
+
     quad_sigma: NotRequired[float]
+    """Amount of Gaussian blur to apply to the segmented image to detect quads, as a standard deviation in pixels."""
+
     refine_edges: NotRequired[bool]
+    """If ``True``, the edges of each quad are adjusted to "snap to" strong gradients nearby."""
+
     decode_sharpening: NotRequired[float]
+    """Amount by which decoded images will be sharpened."""
+
     debug: NotRequired[bool]
+    """
+    If ``True``, write a variety of debugging images to the current working directory at various stages in the
+    detection process.
+    """
+
     search_paths: NotRequired[Sequence[str | os.PathLike]]
+    """Paths to search for the AprilTag C library."""
 
 
 class AprilTagDetector:
@@ -82,7 +130,7 @@ class AprilTagDetector:
                  search_paths: Sequence[str | os.PathLike] = default_search_paths):
         """
         Initializes a new AprilTagDetector.
-        :param families: Sequence of names of AprilTag families the detector will detect.
+        :param families: Name or sequence of names of AprilTag families the detector will detect.
         :param nthreads: Number of threads on which AprilTag detection is running.
         :param quad_decimate: Amount by which to decimate the image.
         :param quad_sigma: Amount of Gaussian blur to apply to the segmented image to detect quads, as a standard
