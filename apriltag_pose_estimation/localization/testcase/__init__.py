@@ -8,7 +8,7 @@ import numpy.typing as npt
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
 from ...core.euclidean import Transform
-from ...core.field import AprilTagField
+from ..field import AprilTagField
 
 
 class PoseEstimationStrategyTestCase:

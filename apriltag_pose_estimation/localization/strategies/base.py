@@ -1,19 +1,22 @@
 import abc
-from collections.abc import Sequence
-from typing import Optional
+from typing import Sequence, Optional, Any, TYPE_CHECKING
 
-from ..core.camera import CameraParameters
-from ..core.detection import AprilTagDetection
-from ..core.euclidean import Transform
-from ..core.field import AprilTagField
+from apriltag_pose_estimation.core import AprilTagDetection, CameraParameters, Transform
 
-
-__all__ = ['PoseEstimationStrategy']
+if TYPE_CHECKING:
+    from apriltag_pose_estimation.localization import AprilTagField
+else:
+    AprilTagField = Any
 
 
-class PoseEstimationStrategy(abc.ABC):
+__all__ = [
+    'CameraLocalizationStrategy'
+]
+
+
+class CameraLocalizationStrategy(abc.ABC):
     """
-    Abstract base class (ABC) for all robot pose estimation strategies.
+    Abstract base class (ABC) for all localization strategies.
 
     A strategy has a single method ``estimate_robot_pose`` which estimates the pose of the world origin in the camera
     frame based on detected AprilTag(s).
@@ -25,12 +28,12 @@ class PoseEstimationStrategy(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def estimate_pose(self,
-                      detections: Sequence[AprilTagDetection],
-                      field: AprilTagField,
-                      camera_params: CameraParameters) -> Optional[Transform]:
+    def estimate_world_to_camera(self,
+                                 detections: Sequence[AprilTagDetection],
+                                 field: AprilTagField,
+                                 camera_params: CameraParameters) -> Optional[Transform]:
         """
-        Estimates the pose of the camera in the world frame based on the detected AprilTag(s).
+        Estimates a Euclidean transformation from the world frame to the camera frame based on the detected AprilTag(s).
 
         This function returns the estimated pose of the *world origin* in the *camera frame*, not the other way around.
         While this may seem unintuitive, it ends up being more useful when transforming the pose later.

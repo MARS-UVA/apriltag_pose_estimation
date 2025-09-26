@@ -1,9 +1,11 @@
+"""Provides a function for generating PDF documents with AprilTags for printing with a traditional printer."""
+
 import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal
 
-from ..core.bindings import AprilTagFamilyId
+from ..core.bindings import AprilTagFamilyId, default_search_paths
 
 try:
     from fpdf import FPDF
@@ -15,26 +17,30 @@ except ImportError as e:
 
 from ..apriltag.render.image import AprilTagImageGenerator
 
+__all__ = [
+    'generate_apriltag_pdf',
+]
+
 MM_OVER_PIXELS = 127 / 480
 
 
-def generate_apriltag_pdf(tag_ids: Sequence[int], tag_size: float,
+def generate_apriltag_pdf(tag_ids: Sequence[int],
+                          tag_size: float,
                           tag_family: AprilTagFamilyId = 'tagStandard41h12',
                           page_format: Literal['a3', 'a4', 'a5', 'letter', 'legal'] | tuple[int | float, int | float] = 'letter',
                           outfile: Path = Path('tags.pdf'),
-                          search_paths: Sequence[str | os.PathLike] = (
-                                  Path(__file__).parent / 'lib',
-                                  Path(__file__).parent / 'lib64'
-                          )) -> None:
+                          search_paths: Sequence[str | os.PathLike] = default_search_paths) -> None:
     """
     Generates a PDF file with the given AprilTags.
-
-    The AprilTag family being used is the tagStandard41h12 family.
-
     :param tag_ids: A sequence of AprilTag IDs. Currently only a limited number of IDs are supported.
-    :param tag_size: The distance between the tag's corner points in millimeters. For the family being used, the corner
-                     points are the corners of the white interior square.
-    :param outfile: The path to which the resulting PDF will be written.
+    :param tag_size: The distance between the tag's corner points in millimeters. Be sure to verify how the corner
+       points are defined for the family you are using (for the default family, the corner points are the corners of
+       the interior square).
+    :param tag_family: The AprilTag family for which tags will be generated (default: ``tagStandard41h12``).
+    :param page_format: The size of the PDF. This may be specified as a string for certain common defaults
+       or as a tuple indicating the size of the horizontal and vertical axes in millimeters (default: ``"letter"``).
+    :param outfile: The path to which the resulting PDF will be written (default: ``./tags.pdf``).
+    :param search_paths: The paths to search for AprilTag image files.
     """
     tag_image_size = tag_size * 9 / 5
 

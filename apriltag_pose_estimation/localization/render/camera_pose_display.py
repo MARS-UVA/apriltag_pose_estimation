@@ -1,22 +1,28 @@
+"""
+Defines a Qt application for displaying the pose of the camera relative to a field of AprilTags.
+
+Requires installing ``apriltag_pose_estimation`` with the "render3d" extra.
+"""
+
 import os
 from collections.abc import Sequence
 from importlib.resources import files
-from pathlib import Path
 from typing import Optional
 
 from ...apriltag.render.image import AprilTagImageGenerator
+from ...core.bindings import default_search_paths
 
 try:
     from PyQt5 import Qt
     import pyvista as pv
     from pyvistaqt import BackgroundPlotter
 except ImportError as e:
-    e.add_note('to use 3D rendering features, install this package with the "render" extra')
+    e.add_note('to use 3D rendering features, install this package with the "render3d" extra')
     raise
 
 from . import resource
 from ...core import Transform
-from ...core.field import AprilTagField
+from ..field import AprilTagField
 
 
 __all__ = ['CameraPoseDisplay']
@@ -39,13 +45,11 @@ class CameraPoseDisplay:
     """
     def __init__(self,
                  field: AprilTagField,
-                 search_paths: Sequence[str | os.PathLike] = (
-                     Path(__file__).parent / 'lib',
-                     Path(__file__).parent / 'lib64'
-                 ),
+                 search_paths: Sequence[str | os.PathLike] = default_search_paths,
                  **kwargs):
         """
         :param field: The field of AprilTags.
+        :param search_paths: Paths to search for the C AprilTag library.
         :param kwargs: Keyword arguments to pass to the underlying plotter (see :class:`BackgroundPlotter`).
         """
         self.__plotter = BackgroundPlotter(**kwargs)

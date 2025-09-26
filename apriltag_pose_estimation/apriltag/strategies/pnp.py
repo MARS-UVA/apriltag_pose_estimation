@@ -1,10 +1,16 @@
+"""
+Defines a strategy for AprilTag pose estimation which involves solving the Perspective-N-Point problem.
+
+This strategy family is generally preferred over the homography-based strategy as it is generally much more accurate.
+"""
+
 from dataclasses import replace
 from typing import List
 
 import numpy as np
 import numpy.typing as npt
 
-from ..estimation import AprilTagPoseEstimationStrategy
+from .base import AprilTagPoseEstimationStrategy
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection, AprilTagDetector
 from ...core.euclidean import Transform
@@ -25,7 +31,7 @@ class PerspectiveNPointStrategy(AprilTagPoseEstimationStrategy):
         self.__method = method
 
     @property
-    def method(self):
+    def method(self) -> PnPMethod:
         """The method which this strategy is using for solving the Perspective-N-Point problem."""
         return self.__method
 

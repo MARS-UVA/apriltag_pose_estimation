@@ -1,3 +1,9 @@
+"""
+Provides a class which can distort and undistort images taken by a camera.
+
+This module is undocumented and untested.
+"""
+
 import numpy as np
 import numpy.typing as npt
 import cv2

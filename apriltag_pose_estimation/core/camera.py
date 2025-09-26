@@ -158,3 +158,14 @@ ARDUCAM_OV9281_PARAMETERS = CameraParameters(fx=917.8689314756377,
                                              p2=-0.004943481865784456,
                                              k3=-0.16330153714848702)
 """Camera parameters for the ArduCam OV9281 camera module."""
+
+
+FACETIME_HD_CAMERA_PARAMETERS = CameraParameters(fx=954.0874994019651,
+                                                 fy=949.9159862376827,
+                                                 cx=660.572082940535,
+                                                 cy=329.78814306885795,
+                                                 k1=0.036998502838994515,
+                                                 k2=-0.13207581435883872,
+                                                 p1=-0.000045055253893522236,
+                                                 p2=-0.007745497656725853,
+                                                 k3=0.11519181871308336)

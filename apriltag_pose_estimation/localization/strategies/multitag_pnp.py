@@ -1,23 +1,25 @@
+"""Defines a Perspective-N-Point based strategy which uses all detected AprilTags at once."""
+
 from collections.abc import Sequence
 from typing import Optional
 
 import numpy as np
 
-from ..estimation import PoseEstimationStrategy
+from .base import CameraLocalizationStrategy
+from ..field import AprilTagField
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
 from ...core.euclidean import Transform
 from ...core.exceptions import EstimationError
-from ...core.field import AprilTagField
 from ...core.pnp import PnPMethod, solve_pnp
 
 
-__all__ = ['MultiTagPnPEstimationStrategy']
+__all__ = ['MultiTagPnPStrategy']
 
 
-class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
+class MultiTagPnPStrategy(CameraLocalizationStrategy):
     """
-    An estimation strategy which solves the Perspective-N-Point problem across all detected AprilTag corner points.
+    A localization strategy which solves the Perspective-N-Point problem across all detected AprilTag corner points.
 
     This strategy is implemented with OpenCV's solvePnP function. See
     https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html for more information.
@@ -28,7 +30,7 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
     This implementation derives heavily from MultiTag pose estimation in PhotonVision (see
     https://github.com/PhotonVision/photonvision/blob/d78f2b8650ac21a54eba94c83931f7b3dd1e32f2/photon-targeting/src/main/java/org/photonvision/estimation/VisionEstimation.java#L122).
     """
-    def __init__(self, fallback_strategy: Optional[PoseEstimationStrategy] = None,
+    def __init__(self, fallback_strategy: Optional[CameraLocalizationStrategy] = None,
                  pnp_method: PnPMethod = PnPMethod.SQPNP):
         """
         :param fallback_strategy: A strategy to use if only one AprilTag was detected or the PnP solver fails. Cannot
@@ -37,7 +39,7 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
                            ``PnPMethod.AP3P`` or ``PnPMethod.IPPE``. Defaults to ``PnPMethod.SQPNP``.
         """
         super().__init__()
-        if isinstance(fallback_strategy, MultiTagPnPEstimationStrategy):
+        if isinstance(fallback_strategy, MultiTagPnPStrategy):
             raise TypeError('multitag fallback strategy cannot be another multitag PnP strategy')
         if pnp_method is PnPMethod.AP3P:
             raise ValueError('PnP method cannot be AP3P for multitag PnP estimation')
@@ -52,8 +54,8 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
                 if self.__fallback_strategy is not None
                 else f'multitag-pnp-{self.__pnp_method.name}')
 
-    def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
-                      camera_params: CameraParameters) -> Optional[Transform]:
+    def estimate_world_to_camera(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
+                                 camera_params: CameraParameters) -> Optional[Transform]:
         if not detections:
             return None
         if len(detections) == 1:
@@ -79,4 +81,4 @@ class MultiTagPnPEstimationStrategy(PoseEstimationStrategy):
                                 camera_params: CameraParameters) -> Optional[Transform]:
         if self.__fallback_strategy is None:
             return None
-        return self.__fallback_strategy.estimate_pose(detections, field, camera_params)
+        return self.__fallback_strategy.estimate_world_to_camera(detections, field, camera_params)

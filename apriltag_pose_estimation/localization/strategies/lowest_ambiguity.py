@@ -1,22 +1,24 @@
+"""Defines the lowest-ambiguity estimation strategy."""
+
 from collections.abc import Sequence
 from typing import Optional, List
 
 import numpy as np
 
-from ..estimation import PoseEstimationStrategy
+from .base import CameraLocalizationStrategy
+from ..field import AprilTagField
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
 from ...core.euclidean import Transform
-from ...core.field import AprilTagField
 from ...core.pnp import PnPMethod, solve_pnp
 
 
-__all__ = ['LowestAmbiguityEstimationStrategy']
+__all__ = ['LowestAmbiguityStrategy']
 
 
-class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
+class LowestAmbiguityStrategy(CameraLocalizationStrategy):
     """
-    An estimation strategy which solves the Perspective-N-Point problem for each AprilTag's corner points and chooses
+    A localization strategy which solves the Perspective-N-Point problem for each AprilTag's corner points and chooses
     the estimate with the lowest ambiguity.
 
     This strategy is implemented with OpenCV's solvePnP function. See
@@ -40,8 +42,8 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
     def name(self) -> str:
         return f'lowest-ambiguity-{self.__pnp_method.name}'
 
-    def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
-                      camera_params: CameraParameters) -> Optional[Transform]:
+    def estimate_world_to_camera(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
+                                 camera_params: CameraParameters) -> Optional[Transform]:
         if not detections:
             return None
         pose_candidates: List[Transform] = []
@@ -70,7 +72,7 @@ class LowestAmbiguityEstimationStrategy(PoseEstimationStrategy):
                 best_pose = poses[0].with_ambiguity(poses[0].error / poses[1].error)
             pose_candidates.append(best_pose)
         if not pose_candidates:
-            return
+            return None
 
         return min(pose_candidates, key=lambda pose: pose.ambiguity if pose.ambiguity is not None else float('inf'))
 

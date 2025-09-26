@@ -10,11 +10,12 @@ import pytest
 from scipy.spatial.transform import Rotation
 
 from apriltag_pose_estimation.apriltag.render import OverlayWriter, WHITE
-from apriltag_pose_estimation.core import AprilTagField, CameraParameters, Transform, PnPMethod
-from apriltag_pose_estimation.localization import PoseEstimationStrategy
-from apriltag_pose_estimation.localization.strategies import (MultiTagPnPEstimationStrategy,
-                                                              MultiTagSpecialEstimationStrategy,
-                                                              LowestAmbiguityEstimationStrategy)
+from apriltag_pose_estimation.core import CameraParameters, Transform, PnPMethod
+from apriltag_pose_estimation.localization import AprilTagField
+from apriltag_pose_estimation.localization.strategies import (CameraLocalizationStrategy,
+                                                              MultiTagPnPStrategy,
+                                                              MultiTagSpecialStrategy,
+                                                              LowestAmbiguityStrategy)
 from apriltag_pose_estimation.localization.testcase import PoseEstimationStrategyTestCase
 
 import test.resources
@@ -161,9 +162,9 @@ def get_cases() -> List[PoseEstimationStrategyTestCase]:
 cases = get_cases()
 
 
-def strategy_tester(strategy: PoseEstimationStrategy, case: PoseEstimationStrategyTestCase) -> None:
-    pose = strategy.estimate_pose(detections=case.detections, field=case.apriltag_field,
-                                  camera_params=case.camera_params)
+def strategy_tester(strategy: CameraLocalizationStrategy, case: PoseEstimationStrategyTestCase) -> None:
+    pose = strategy.estimate_world_to_camera(detections=case.detections, field=case.apriltag_field,
+                                             camera_params=case.camera_params)
     assert pose is not None
     camera_in_origin = pose.inv()
     assert camera_in_origin.input_space == case.actual_camera_pose.input_space
@@ -177,26 +178,26 @@ def strategy_tester(strategy: PoseEstimationStrategy, case: PoseEstimationStrate
 )))
 def test_lowest_ambiguity_strategy(pnp_method: PnPMethod,
                                    case: PoseEstimationStrategyTestCase):
-    strategy_tester(LowestAmbiguityEstimationStrategy(pnp_method=pnp_method), case)
+    strategy_tester(LowestAmbiguityStrategy(pnp_method=pnp_method), case)
 
 
 @pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product(
-    (LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod),
+    (LowestAmbiguityStrategy(pnp_method=method) for method in PnPMethod),
     [PnPMethod.ITERATIVE, PnPMethod.SQPNP],
     cases
 )))
-def test_multitag_pnp_strategy(fallback_strategy: PoseEstimationStrategy,
+def test_multitag_pnp_strategy(fallback_strategy: CameraLocalizationStrategy,
                                pnp_method: PnPMethod,
                                case: PoseEstimationStrategyTestCase):
-    strategy_tester(MultiTagPnPEstimationStrategy(fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)
+    strategy_tester(MultiTagPnPStrategy(fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)
 
 
 @pytest.mark.parametrize('fallback_strategy,pnp_method,case', list(product(
-    [LowestAmbiguityEstimationStrategy(pnp_method=method) for method in PnPMethod],
+    [LowestAmbiguityStrategy(pnp_method=method) for method in PnPMethod],
     iter(PnPMethod),
     cases
 )))
-def test_multitag_special_strategy(fallback_strategy: PoseEstimationStrategy,
+def test_multitag_special_strategy(fallback_strategy: CameraLocalizationStrategy,
                                    pnp_method: PnPMethod,
                                    case: PoseEstimationStrategyTestCase):
-    strategy_tester(MultiTagSpecialEstimationStrategy(angle_producer=lambda: case.actual_camera_pose.rotation, fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)
+    strategy_tester(MultiTagSpecialStrategy(angle_producer=lambda: case.actual_camera_pose.rotation, fallback_strategy=fallback_strategy, pnp_method=pnp_method), case)

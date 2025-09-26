@@ -1,6 +1,5 @@
 """Operations for loading and representing 3D fields with AprilTags."""
 
-
 import json
 from collections.abc import Mapping
 from typing import Dict, List, Optional, TextIO
@@ -9,8 +8,8 @@ import numpy as np
 import numpy.typing as npt
 from scipy.spatial.transform import Rotation
 
-from .bindings import AprilTagFamilyId
-from .euclidean import Transform
+from ..core.bindings import AprilTagFamilyId
+from ..core.euclidean import Transform
 
 
 __all__ = ['AprilTagField', 'load_field']
@@ -18,7 +17,7 @@ __all__ = ['AprilTagField', 'load_field']
 
 class AprilTagField(Mapping[int, Transform]):
     """
-    A class whose instances store information about the AprilTags in the region in which the robot is operating.
+    A class whose instances store information about the AprilTags in the region in which the camera is operating.
 
     This class implements the :class:`Mapping` protocol, where the keys are tag IDs and the values are their poses in
     the world frame.
@@ -74,7 +73,7 @@ class AprilTagField(Mapping[int, Transform]):
         """The output space of each tag position, if specified."""
         return self.__output_space
 
-    def __getitem__(self, __key: int):
+    def __getitem__(self, __key: int) -> Transform:
         return self.__tag_positions[__key]
 
     def get_corners(self, *tag_ids: int) -> npt.NDArray[np.float64]:

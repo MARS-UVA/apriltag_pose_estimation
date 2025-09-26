@@ -3,7 +3,7 @@ from typing import List, Unpack
 import numpy as np
 import numpy.typing as npt
 
-from .estimation import AprilTagPoseEstimationStrategy
+from .strategies.base import AprilTagPoseEstimationStrategy
 from ..core.camera import CameraParameters
 from ..core.detection import AprilTagDetection, AprilTagDetector, AprilTagDetectorParams
 

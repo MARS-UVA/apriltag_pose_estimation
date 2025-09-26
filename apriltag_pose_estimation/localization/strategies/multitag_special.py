@@ -1,38 +1,40 @@
+"""Defines a special localization strategy"""
+
 from collections.abc import Sequence, Callable
 from typing import Optional, List
 
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from ..estimation import PoseEstimationStrategy
+from .base import CameraLocalizationStrategy
+from ..field import AprilTagField
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection
 from ...core.euclidean import Transform
 from ...core.exceptions import EstimationError
-from ...core.field import AprilTagField
 from ...core.pnp import PnPMethod, solve_pnp
 
 
-__all__ = ['MultiTagSpecialEstimationStrategy']
+__all__ = ['MultiTagSpecialStrategy']
 
 
-class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
+class MultiTagSpecialStrategy(CameraLocalizationStrategy):
     """
-    An estimation strategy which attempts to resolve ambiguous tag poses to compile a more accurate result.
+    A localization strategy which attempts to resolve ambiguous tag poses to compute a more accurate result.
 
-    Unlike other strategies, this strategy requires knowledge of the camera's angle in the world frame (passed as the
-    world origin's rotation in the camera frame). Each of the corners of the detected AprilTags is computed in the world
-    frame, and each set of corners are used to solve the PnP problem to determine candidate poses for the world origin.
-    Then only the solutions for each AprilTag which are closest to the actual angle kept, and their translations and
-    rotations are averaged to produce a final estimate.
+    Unlike other strategies, this strategy requires an accurate measurement of the camera's angle in the world frame
+    (passed as the world origin's rotation in the camera frame). Each of the corners of the detected AprilTags is
+    computed in the world frame, and each set of corners are used to solve the PnP problem to determine candidate poses
+    for the world origin. Then only the solutions for each AprilTag which are closest to the actual angle kept, and
+    their translations and rotations are averaged to produce a final estimate.
 
     If there is only one detected AprilTag or if the PnP solver fails on all AprilTags, a fallback strategy is used.
 
-    This method relies on having an accurate source of the camera's angle, such as with an IMU.
+    *The implementation of this strategy is likely to change in the future.*
     """
     def __init__(self,
                  angle_producer: Callable[[], Rotation],
-                 fallback_strategy: Optional[PoseEstimationStrategy] = None,
+                 fallback_strategy: Optional[CameraLocalizationStrategy] = None,
                  pnp_method: PnPMethod = PnPMethod.IPPE):
         """
         :param angle_producer: A function which returns the most recently measured angle of the world origin in the
@@ -43,7 +45,7 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
                            ``PnPMethod.IPPE``.
         """
         super().__init__()
-        if isinstance(fallback_strategy, MultiTagSpecialEstimationStrategy):
+        if isinstance(fallback_strategy, MultiTagSpecialStrategy):
             raise TypeError('multitag fallback strategy cannot be another multitag special strategy')
         self.__angle_producer = angle_producer
         self.__fallback_strategy = fallback_strategy
@@ -55,8 +57,8 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
                 if self.__fallback_strategy is not None
                 else f'multitag-special-{self.__pnp_method.name}')
 
-    def estimate_pose(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
-                      camera_params: CameraParameters) -> Optional[Transform]:
+    def estimate_world_to_camera(self, detections: Sequence[AprilTagDetection], field: AprilTagField,
+                                 camera_params: CameraParameters) -> Optional[Transform]:
         if not detections:
             return None
         if len(detections) == 1:
@@ -103,4 +105,4 @@ class MultiTagSpecialEstimationStrategy(PoseEstimationStrategy):
                                 camera_params: CameraParameters) -> Optional[Transform]:
         if self.__fallback_strategy is None:
             return None
-        return self.__fallback_strategy.estimate_pose(detections, field, camera_params)
+        return self.__fallback_strategy.estimate_world_to_camera(detections, field, camera_params)

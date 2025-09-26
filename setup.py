@@ -16,7 +16,7 @@ setup(
         'scipy'
     ],
     extras_require={
-        'render': [
+        'render3d': [
             'meshio',
             'pyvista',
             'pyvistaqt',

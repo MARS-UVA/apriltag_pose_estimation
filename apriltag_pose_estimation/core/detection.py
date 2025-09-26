@@ -1,10 +1,4 @@
-"""
-Provides types for detecting AprilTags.
-
-For example:
-
-
-"""
+"""Provides types for detecting AprilTags."""
 
 import ctypes
 import logging

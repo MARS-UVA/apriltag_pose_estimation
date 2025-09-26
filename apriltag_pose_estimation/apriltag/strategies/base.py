@@ -1,17 +1,21 @@
+"""Defines the base class for all pose estimation strategies."""
+
 import abc
 from typing import List
 
 import numpy as np
-import numpy.typing as npt
+from numpy import typing as npt
 
-from ..core.camera import CameraParameters
-from ..core.detection import AprilTagDetection, AprilTagDetector
+from apriltag_pose_estimation.core import AprilTagDetector, CameraParameters, AprilTagDetection
 
-__all__ = ['AprilTagPoseEstimationStrategy']
+
+__all__ = [
+    'AprilTagPoseEstimationStrategy'
+]
 
 
 class AprilTagPoseEstimationStrategy(abc.ABC):
-    """A strategy for pose estimation of AprilTag tags."""
+    """Abstract base class for strategies to estimate the positions of AprilTags relative to a camera."""
     @abc.abstractmethod
     def estimate_tag_pose(self,
                           image: npt.NDArray[np.uint8],
@@ -32,4 +36,5 @@ class AprilTagPoseEstimationStrategy(abc.ABC):
     @property
     @abc.abstractmethod
     def name(self):
+        """A name for this strategy."""
         pass

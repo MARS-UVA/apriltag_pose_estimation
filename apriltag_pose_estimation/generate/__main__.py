@@ -31,7 +31,7 @@ def process_desired_tags(desired_tags_string: str) -> list[int]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog='generate',
+    parser = argparse.ArgumentParser(prog='apriltag_pose_estimation.generate',
                                      description='Generate printable PDFs for AprilTags',
                                      epilog='The AprilTag family being used is the tagStandard41h12 family.')
     parser.add_argument('--ids', dest='tag_ids', required=True, type=process_desired_tags,

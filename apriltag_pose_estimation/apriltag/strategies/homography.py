@@ -1,8 +1,10 @@
+"""Defines a strategy for AprilTag pose estimation which uses Orthogonal Iteration on an initial estimate."""
+
 from typing import List
 
 import numpy as np
 import numpy.typing as npt
-from ..estimation import AprilTagPoseEstimationStrategy
+from .base import AprilTagPoseEstimationStrategy
 from ...core.camera import CameraParameters
 from ...core.detection import AprilTagDetection, AprilTagDetector
 

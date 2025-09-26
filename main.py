@@ -5,12 +5,11 @@ from PyQt5 import Qt
 
 from apriltag_pose_estimation import resource
 from apriltag_pose_estimation.apriltag.render import OverlayWriter
-from apriltag_pose_estimation.core import IPHONE_13_MINI_MAIN_CAM_PARAMETERS, load_field, AprilTagField, Transform, \
-    ARDUCAM_OV9281_PARAMETERS
-from apriltag_pose_estimation.localization import PoseEstimator
+from apriltag_pose_estimation.core.camera import FACETIME_HD_CAMERA_PARAMETERS
+from apriltag_pose_estimation.localization import CameraLocalizer, load_field
 from apriltag_pose_estimation.localization.render import CameraPoseDisplay
-from apriltag_pose_estimation.localization.strategies import MultiTagPnPEstimationStrategy, \
-    LowestAmbiguityEstimationStrategy
+from apriltag_pose_estimation.localization.strategies import MultiTagPnPStrategy, \
+    LowestAmbiguityStrategy
 
 
 def main() -> None:
@@ -26,17 +25,19 @@ def main() -> None:
                                        detections=result.detections,
                                        camera_params=estimator.camera_params,
                                        tag_size=estimator.field.tag_size)
-        overlay_writer.overlay_square(show_corners=True)
+        if result.estimated_pose is not None:
+            overlay_writer.overlay_cubes()
+        # overlay_writer.overlay_square(show_corners=True)
         overlay_writer.overlay_label()
         cv2.imshow('camera', frame)
 
     with files(resource).joinpath('testfield.json').open(mode='r') as f:
         field = load_field(f)
 
-    estimator = PoseEstimator(
-        strategy=MultiTagPnPEstimationStrategy(fallback_strategy=LowestAmbiguityEstimationStrategy()),
+    estimator = CameraLocalizer(
+        strategy=MultiTagPnPStrategy(fallback_strategy=LowestAmbiguityStrategy()),
         field=field,
-        camera_params=ARDUCAM_OV9281_PARAMETERS,
+        camera_params=FACETIME_HD_CAMERA_PARAMETERS,
         nthreads=2,
         quad_sigma=0,
         refine_edges=True,

@@ -15,13 +15,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(prog='calibrate',
                                      description='Calibrate a camera in OpenCV from a video file')
     parser.add_argument('video', type=Path,
-                        help='the video file from which calibration will be done')
+                        help='The video file from which calibration will be done. The format must be supported by '
+                             'OpenCV.')
     parser.add_argument('--long', type=int, required=True,
-                        help='the number of squares on the long edge')
+                        help='The number of squares on the long edge.')
     parser.add_argument('--short', type=int, required=True,
-                        help='the number of squares on the short edge')
+                        help='The number of squares on the short edge.')
     parser.add_argument('--skip', type=int, default=1, required=False,
-                        help='the number of frames to skip between each frame (default 1)')
+                        help='The number of frames to skip between each analyzed frame (default 1).')
     args = parser.parse_args()
 
     y_corners = args.long - 1

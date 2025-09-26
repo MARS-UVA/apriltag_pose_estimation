@@ -68,11 +68,12 @@ camera_params = CameraParameters(fx=1329.143348,
 Create a pose estimator:
 
 ```python
-from apriltag_pose_estimation.localization import PoseEstimator
-from apriltag_pose_estimation.localization.strategies import (MultiTagPnPEstimationStrategy, 
-                                                              LowestAmbiguityEstimationStrategy)
-estimator = PoseEstimator(
-    strategy=MultiTagPnPEstimationStrategy(fallback_strategy=LowestAmbiguityEstimationStrategy()),
+from apriltag_pose_estimation.localization import CameraLocalizer
+from apriltag_pose_estimation.localization.strategies import (MultiTagPnPStrategy,
+                                                              LowestAmbiguityStrategy)
+
+estimator = CameraLocalizer(
+    strategy=MultiTagPnPStrategy(fallback_strategy=LowestAmbiguityStrategy()),
     field=field,
     camera_params=camera_params,
     nthreads=2,

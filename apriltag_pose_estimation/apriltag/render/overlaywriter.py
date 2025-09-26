@@ -1,3 +1,5 @@
+"""Defines a utility class for overlaying graphics on images containing AprilTags."""
+
 from collections.abc import Callable, Iterable
 from enum import IntEnum
 from itertools import chain
@@ -36,8 +38,8 @@ class OverlayWriter:
     def __init__(self,
                  image: npt.NDArray[np.uint8],
                  detections: Iterable[AprilTagDetection],
-                 camera_params: CameraParameters,
-                 tag_size: float):
+                 camera_params: CameraParameters | None = None,
+                 tag_size: float | None = None):
         """
         Initializes a new OverlayWriter.
         :param image: The image on which to draw the overlay.
@@ -107,6 +109,9 @@ class OverlayWriter:
                      z_color: Color = BLUE) -> None:
         """
         Overlay the axes corresponding to each detected AprilTag on the image.
+
+        The provided AprilTag detections must contain 3D pose information.
+
         :param axis_length: The length of each axis as a proportion of the tag size (default: 0.5).
         :param thickness: The thickness of the lines for the axes (default: 2).
         :param invert_x: Whether to invert the x-axis (default: False).
@@ -115,6 +120,7 @@ class OverlayWriter:
         :param x_color: The color with which to draw the x-axis (default: red).
         :param y_color: The color with which to draw the y-axis (default: green).
         :param z_color: The color with which to draw the z-axis (default: blue).
+        :raise ValueError: If the provided AprilTag detections do not contain 3D pose information.
         """
         object_points = np.array([[
             [0, 0, 0],
@@ -131,7 +137,11 @@ class OverlayWriter:
     def overlay_cube(self, color: Color = RED) -> None:
         """
         Overlay the cube corresponding to each detected AprilTag on the image.
+
+        The provided AprilTag detections must contain 3D pose information.
+
         :param color: The color with which to draw the cube (default: red).
+        :raise ValueError: If the provided AprilTag detections do not contain 3D pose information.
         """
         object_points = np.array([[
             [-1, -1, 0],
@@ -167,7 +177,11 @@ class OverlayWriter:
         """
         Overlay cubes corresponding to each possible pose of the detected AprilTags on the image. Poses with higher
         reprojection errors are drawn with opacity.
+
+        The provided AprilTag detections must contain 3D pose information.
+
         :param color: The color with which to draw the cubes (default: red).
+        :raise ValueError: If the provided AprilTag detections do not contain 3D pose information.
         """
         object_points = np.array([[
             [-1, -1, 0],
@@ -195,6 +209,8 @@ class OverlayWriter:
             [3, 7]
         ])
         for detection in self.__detections:
+            if detection.tag_poses is None:
+                raise ValueError('Cannot overlay cubes without 3D tag poses')
             total_errors = sum(pose.error if pose.error else 0 for pose in detection.tag_poses)
             for pose in detection.tag_poses:
                 projected_points = self.__project(object_points, pose)
