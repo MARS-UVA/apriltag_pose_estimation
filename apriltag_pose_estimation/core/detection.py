@@ -321,7 +321,7 @@ class AprilTagDetector:
                             raise ValueError('tag_size is required if estimate_tag_pose is true')
 
                         info = apriltag_detection_info(
-                            det=detection,
+                            det=detection_ptr,
                             tagsize=tag_size,
                             fx=camera_params.fx,
                             fy=camera_params.fy,
@@ -335,13 +335,18 @@ class AprilTagDetector:
                             ctypes.byref(info), ctypes.byref(pose)
                         )
 
-                        tag_pose = Transform.make(
-                            rotation=Rotation.from_matrix(_matd_get_array(pose.R).copy()),
-                            translation=_matd_get_array(pose.t).copy(),
-                            input_space='tag_optical',
-                            output_space='camera_optical',
-                            error=err
-                        )
+                        pose_matrix = _matd_get_array(pose.R).copy()
+
+                        try:
+                            tag_pose = Transform.make(
+                                rotation=Rotation.from_matrix(pose_matrix),
+                                translation=_matd_get_array(pose.t).copy(),
+                                input_space='tag_optical',
+                                output_space='camera_optical',
+                                error=err
+                            )
+                        except ValueError:
+                            tag_pose = None
                     else:
                         tag_pose = None
 
