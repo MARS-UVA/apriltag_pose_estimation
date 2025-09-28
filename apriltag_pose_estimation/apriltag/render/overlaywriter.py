@@ -122,6 +122,10 @@ class OverlayWriter:
         :param z_color: The color with which to draw the z-axis (default: blue).
         :raise ValueError: If the provided AprilTag detections do not contain 3D pose information.
         """
+        if self.__camera_params is None:
+            raise ValueError('Camera parameters not provided, so overlay_axes is not allowed')
+        if self.__tag_size is None:
+            raise ValueError('AprilTag size not provided, so overlay_axes is not allowed')
         object_points = np.array([[
             [0, 0, 0],
             [-1 if invert_x else 1, 0, 0],
@@ -143,46 +147,11 @@ class OverlayWriter:
         :param color: The color with which to draw the cube (default: red).
         :raise ValueError: If the provided AprilTag detections do not contain 3D pose information.
         """
-        object_points = np.array([[
-            [-1, -1, 0],
-            [+1, -1, 0],
-            [+1, +1, 0],
-            [-1, +1, 0],
-            [-1, -1, -2],
-            [+1, -1, -2],
-            [+1, +1, -2],
-            [-1, +1, -2],
-            [0, 0, -1]
-        ]]) / 2 * self.__tag_size
-        edges = np.array([
-            [0, 1],
-            [1, 2],
-            [2, 3],
-            [3, 0],
-            [4, 5],
-            [5, 6],
-            [6, 7],
-            [7, 4],
-            [0, 4],
-            [1, 5],
-            [2, 6],
-            [3, 7]
-        ])
-        for detection in self.__detections:
-            projected_points = self.__project(object_points, detection.best_tag_pose)
-            for i, j in edges:
-                cv2.line(self.__image, projected_points[i], projected_points[j], color=color.bgr(), thickness=2)
+        if self.__camera_params is None:
+            raise ValueError('Camera parameters not provided, so overlay_cube is not allowed')
+        if self.__tag_size is None:
+            raise ValueError('AprilTag size not provided, so overlay_cube is not allowed')
 
-    def overlay_cubes(self, color: Color = RED) -> None:
-        """
-        Overlay cubes corresponding to each possible pose of the detected AprilTags on the image. Poses with higher
-        reprojection errors are drawn with opacity.
-
-        The provided AprilTag detections must contain 3D pose information.
-
-        :param color: The color with which to draw the cubes (default: red).
-        :raise ValueError: If the provided AprilTag detections do not contain 3D pose information.
-        """
         object_points = np.array([[
             [-1, -1, 0],
             [+1, -1, 0],
@@ -210,7 +179,52 @@ class OverlayWriter:
         ])
         for detection in self.__detections:
             if detection.tag_poses is None:
-                raise ValueError('Cannot overlay cubes without 3D tag poses')
+                continue
+            projected_points = self.__project(object_points, detection.best_tag_pose)
+            for i, j in edges:
+                cv2.line(self.__image, projected_points[i], projected_points[j], color=color.bgr(), thickness=2)
+
+    def overlay_cubes(self, color: Color = RED) -> None:
+        """
+        Overlay cubes corresponding to each possible pose of the detected AprilTags on the image. Poses with higher
+        reprojection errors are drawn with opacity.
+
+        The provided AprilTag detections must contain 3D pose information.
+
+        :param color: The color with which to draw the cubes (default: red).
+        :raise ValueError: If the provided AprilTag detections do not contain 3D pose information.
+        """
+        if self.__camera_params is None:
+            raise ValueError('Camera parameters not provided, so overlay_cubes is not allowed')
+        if self.__tag_size is None:
+            raise ValueError('AprilTag size not provided, so overlay_cubes is not allowed')
+        object_points = np.array([[
+            [-1, -1, 0],
+            [+1, -1, 0],
+            [+1, +1, 0],
+            [-1, +1, 0],
+            [-1, -1, 2],
+            [+1, -1, 2],
+            [+1, +1, 2],
+            [-1, +1, 2],
+        ]]) / 2 * self.__tag_size
+        edges = np.array([
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 0],
+            [4, 5],
+            [5, 6],
+            [6, 7],
+            [7, 4],
+            [0, 4],
+            [1, 5],
+            [2, 6],
+            [3, 7]
+        ])
+        for detection in self.__detections:
+            if detection.tag_poses is None:
+                continue
             total_errors = sum(pose.error if pose.error else 0 for pose in detection.tag_poses)
             for pose in detection.tag_poses:
                 projected_points = self.__project(object_points, pose)
@@ -220,7 +234,7 @@ class OverlayWriter:
                     alpha = 1 - (pose.error / total_errors)
                 image_copy = np.array(self.__image)
                 for i, j in edges:
-                    cv2.line(self.__image, projected_points[i], projected_points[j], color=color.bgr(), thickness=2)
+                    cv2.line(self.__image, projected_points[i].astype(np.int32), projected_points[j].astype(np.int32), color=color.bgr(), thickness=2)
                 cv2.addWeighted(self.__image, alpha, image_copy, 1 - alpha, 0, self.__image)
 
     def __project(self, object_points: npt.NDArray[np.float64], pose: Transform):
