@@ -262,9 +262,16 @@ def __get_env_path() -> Path:
     return Path(sys.executable).parents[1]
 
 
-default_search_paths = (__get_env_path() / 'lib',
-                        __get_env_path() / 'lib64',
-                        __get_env_path() / 'bin',)
+def __get_default_search_paths() -> tuple[Path, ...]:
+    if platform.system() == 'Windows':
+        return (__get_env_path() / 'Lib',
+                __get_env_path() / 'bin',)
+    else:
+        return (__get_env_path() / 'lib',
+                __get_env_path() / 'lib64')
+
+
+default_search_paths = __get_default_search_paths()
 
 
 class AprilTagLibrary:
