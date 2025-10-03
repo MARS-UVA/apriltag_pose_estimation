@@ -263,7 +263,8 @@ def __get_env_path() -> Path:
 
 
 default_search_paths = (__get_env_path() / 'lib',
-                        __get_env_path() / 'lib64')
+                        __get_env_path() / 'lib64',
+                        __get_env_path() / 'bin',)
 
 
 class AprilTagLibrary:
