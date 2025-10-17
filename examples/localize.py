@@ -1,8 +1,6 @@
 import cv2
-from PyQt5 import Qt
 
-from apriltag_pose_estimation.apriltag.render import OverlayWriter
-from apriltag_pose_estimation.core.camera import LOGITECH_CAM_PARAMETERS, FACETIME_HD_CAMERA_PARAMETERS
+from apriltag_pose_estimation.core.camera import FACETIME_HD_CAMERA_PARAMETERS
 from apriltag_pose_estimation.localization import CameraLocalizer, load_field
 from apriltag_pose_estimation.localization.strategies import MultiTagPnPStrategy, \
     LowestAmbiguityStrategy
