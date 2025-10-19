@@ -31,6 +31,6 @@ setup(
     },
     python_requires='>=3.10',
     zip_safe=False,
-    author='MARS @ UVA',
+    author='The Mechatronics and Robotics Society at the University of Virginia',
     description='A Python library for pose estimation using AprilTags.'
 )
