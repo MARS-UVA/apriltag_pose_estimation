@@ -8,20 +8,17 @@ import cv2
 import numpy as np
 import numpy.typing as npt
 
-from ...core.bindings import AprilTagFamilyId, AprilTagLibrary, _image_u8_get_array, image_u8, default_search_paths
+from ...core.bindings import AprilTagFamilyId, AprilTagLibrary, _image_u8_get_array, image_u8
 
 
 class AprilTagImageGenerator:
     """A class which generates images of AprilTags."""
 
-    def __init__(self,
-                 family: AprilTagFamilyId,
-                 search_paths: Sequence[str | os.PathLike] = default_search_paths):
+    def __init__(self, family: AprilTagFamilyId):
         """
         :param family: The name of the AprilTag family for which images will be generated.
-        :param search_paths: Search paths for the C AprilTag library.
         """
-        self.__library = AprilTagLibrary(search_paths=search_paths)
+        self.__library = AprilTagLibrary.load()
         self.__family = self.__library.get_family(family)
         self.__family_name = family
 

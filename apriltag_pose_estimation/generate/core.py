@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal
 
-from ..core.bindings import AprilTagFamilyId, default_search_paths
+from ..core.bindings import AprilTagFamilyId
 
 try:
     from fpdf import FPDF
@@ -24,12 +24,9 @@ __all__ = [
 MM_OVER_PIXELS = 127 / 480
 
 
-def generate_apriltag_pdf(tag_ids: Sequence[int],
-                          tag_size: float,
-                          tag_family: AprilTagFamilyId = 'tagStandard41h12',
-                          page_format: Literal['a3', 'a4', 'a5', 'letter', 'legal'] | tuple[int | float, int | float] = 'letter',
-                          outfile: Path = Path('tags.pdf'),
-                          search_paths: Sequence[str | os.PathLike] = default_search_paths) -> None:
+def generate_apriltag_pdf(tag_ids: Sequence[int], tag_size: float, tag_family: AprilTagFamilyId = 'tagStandard41h12',
+                          page_format: Literal['a3', 'a4', 'a5', 'letter', 'legal'] | tuple[
+                              int | float, int | float] = 'letter', outfile: Path = Path('tags.pdf')) -> None:
     """
     Generates a PDF file with the given AprilTags.
     :param tag_ids: A sequence of AprilTag IDs. Currently only a limited number of IDs are supported.
@@ -40,7 +37,6 @@ def generate_apriltag_pdf(tag_ids: Sequence[int],
     :param page_format: The size of the PDF. This may be specified as a string for certain common defaults
        or as a tuple indicating the size of the horizontal and vertical axes in millimeters (default: ``"letter"``).
     :param outfile: The path to which the resulting PDF will be written (default: ``./tags.pdf``).
-    :param search_paths: The paths to search for AprilTag image files.
     """
     tag_image_size = tag_size * 9 / 5
 
@@ -59,7 +55,7 @@ def generate_apriltag_pdf(tag_ids: Sequence[int],
     marker_distance_from_x_edge_closer = max(6, marker_distance_from_x_edge - 10)
     marker_distance_from_y_edge_closer = max(6, marker_distance_from_y_edge - 10)
 
-    apriltag_image_generator = AprilTagImageGenerator(family=tag_family, search_paths=search_paths)
+    apriltag_image_generator = AprilTagImageGenerator(family=tag_family)
 
     for tag_id, tag_img in ((tag_id,
                              Image.fromarray(apriltag_image_generator.generate_image(tag_id, 2 * round(tag_image_size / MM_OVER_PIXELS))))

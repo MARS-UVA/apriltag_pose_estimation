@@ -51,7 +51,7 @@ class CameraParameters:
     """Third parameter of radial distortion."""
 
     @classmethod
-    def from_matrices(cls, camera_matrix: npt.NDArray[np.float_], distortion_vector: npt.NDArray[np.float_]):
+    def from_matrices(cls, camera_matrix: npt.NDArray[np.float64], distortion_vector: npt.NDArray[np.float64]):
         """
         Create a ``CameraParameters`` object from a camera matrix and distortion vector.
 

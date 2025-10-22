@@ -50,11 +50,9 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    generate_apriltag_pdf(tag_ids=args.tag_ids,
-                          tag_size=args.tag_size,
+    generate_apriltag_pdf(tag_ids=args.tag_ids, tag_size=args.tag_size,
                           page_format=(279.4, 431.8) if args.page_format == 'ledger' else args.page_format,
-                          outfile=args.outfile,
-                          search_paths='.')
+                          outfile=args.outfile)
 
 
 if __name__ == '__main__':

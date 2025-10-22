@@ -19,10 +19,10 @@ import os
 import platform
 import sys
 from collections.abc import Sequence, Iterator
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from itertools import chain
 from pathlib import Path
-from typing import TypeAlias, Literal, Any
+from typing import TypeAlias, Literal, Any, Generator
 
 import numpy as np
 import numpy.typing as npt
@@ -271,7 +271,44 @@ def __get_default_search_paths() -> tuple[Path, ...]:
                 __get_env_path() / 'lib64')
 
 
-default_search_paths = __get_default_search_paths()
+_global_search_paths = __get_default_search_paths()
+
+
+def set_search_paths(relative_to_cwd: Sequence[Path] | None = None,
+                     relative_to_env: Sequence[Path] | None = None) -> None:
+    """
+    Set the search path for the AprilTag library globally.
+
+    You should probably use :py:func:`setting_search_paths` instead.
+
+    :param relative_to_cwd: Paths relative to the current working directory (or absolute paths).
+    :param relative_to_env: Paths relative to the Python environment executing the program.
+    """
+    global _global_search_paths
+    if not (relative_to_cwd or relative_to_env):
+        raise ValueError('must provide at least one search path')
+    env_path = __get_env_path()
+    _global_search_paths = (tuple(relative_to_cwd) or ()) + tuple(env_path / path for path in relative_to_env)
+
+
+@contextmanager
+def setting_search_paths(*,
+                         relative_to_cwd: Sequence[Path] | None = None,
+                         relative_to_env: Sequence[Path] | None = None) -> Generator[None, Any, None]:
+    """
+    Context manager which temporarily sets the global AprilTag library search paths.
+
+    :param relative_to_cwd: Paths relative to the current working directory (or absolute paths).
+    :param relative_to_env: Paths relative to the Python environment executing the program.
+    """
+    global _global_search_paths
+    if not (relative_to_cwd or relative_to_env):
+        raise ValueError('must provide at least one search path')
+    env_path = __get_env_path()
+    old_search_paths = _global_search_paths
+    _global_search_paths = (tuple(relative_to_cwd) or ()) + tuple(env_path / path for path in (relative_to_env or ()))
+    yield
+    _global_search_paths = old_search_paths
 
 
 class AprilTagLibrary:
@@ -285,7 +322,7 @@ class AprilTagLibrary:
     """
     _found_libraries: 'dict[tuple[str | os.PathLike, ...], AprilTagLibrary]' = {}
 
-    def __init__(self, search_paths: Sequence[str | os.PathLike] = default_search_paths):
+    def __init__(self, search_paths: Sequence[str | os.PathLike]):
         """
         Initializes a new AprilTagLibrary object.
 
@@ -296,7 +333,7 @@ class AprilTagLibrary:
         self.__libc = AprilTagLibrary._get_apriltag_library(search_paths=search_paths)
 
     @classmethod
-    def load(cls, search_paths: Sequence[str | os.PathLike] = default_search_paths):
+    def load(cls, search_paths: Sequence[str | os.PathLike] | None = None):
         """
         Loads an AprilTag library which is located at one of the provided search paths.
 
@@ -306,7 +343,10 @@ class AprilTagLibrary:
         :param search_paths: Paths to search for the AprilTag C library.
         :return: A new :py:class:`AprilTagLibrary` object.
         """
-        search_paths = tuple(search_paths)
+        if search_paths is None:
+            search_paths = tuple(_global_search_paths)
+        else:
+            search_paths = tuple(search_paths)
         if search_paths in cls._found_libraries:
             return cls._found_libraries[search_paths]
         instance = cls(search_paths=search_paths)

@@ -14,7 +14,7 @@ from scipy.spatial.transform import Rotation
 from . import CameraParameters
 from .bindings import (apriltag_detector, zarray, apriltag_detection, zarray_get, _matd_get_array,
                        apriltag_detection_info, apriltag_pose, image_u8, _image_u8_get_array, AprilTagFamilyId,
-                       AprilTagLibrary, AprilTagFamily, default_search_paths)
+                       AprilTagLibrary, AprilTagFamily)
 from .euclidean import Transform
 
 
@@ -106,9 +106,6 @@ class AprilTagDetectorParams(TypedDict):
     detection process.
     """
 
-    search_paths: NotRequired[Sequence[str | os.PathLike]]
-    """Paths to search for the AprilTag C library."""
-
 
 class AprilTagDetector:
     """A detector for AprilTags in images."""
@@ -120,8 +117,7 @@ class AprilTagDetector:
                  quad_sigma: float = 0.0,
                  refine_edges: bool = True,
                  decode_sharpening: float = 0.25,
-                 debug: bool = False,
-                 search_paths: Sequence[str | os.PathLike] = default_search_paths):
+                 debug: bool = False):
         """
         Initializes a new AprilTagDetector.
         :param families: Name or sequence of names of AprilTag families the detector will detect.
@@ -136,7 +132,7 @@ class AprilTagDetector:
         :param search_paths: Paths to search for the AprilTag C library.
         """
         self.__ptr = None
-        self.__library = AprilTagLibrary(search_paths=search_paths)
+        self.__library = AprilTagLibrary.load()
         self.__library.libc.apriltag_detector_create.restype = ctypes.POINTER(apriltag_detector)
         self.__ptr = self.__library.libc.apriltag_detector_create()
 
