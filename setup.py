@@ -11,20 +11,12 @@ setup(
     packages=find_packages(include=[package_name, f'{package_name}.*'], exclude=['*.testcase']),
     install_requires=[
         'setuptools',
-        'numpy',
+        'numpy<2',
         'opencv-python',
         'scipy'
     ],
     extras_require={
         'generate': [
-            'Pillow',
-            'fpdf2'
-        ],
-        'complete': [
-            'meshio',
-            'pyvista',
-            'pyvistaqt',
-            'PyQt5',
             'Pillow',
             'fpdf2'
         ]
