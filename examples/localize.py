@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import cv2
 
 from apriltag_pose_estimation.core.camera import FACETIME_HD_CAMERA_PARAMETERS
@@ -7,8 +9,8 @@ from apriltag_pose_estimation.localization.strategies import MultiTagPnPStrategy
 
 
 def main() -> None:
-
-    with open('onetag_testfield.json', mode='r') as f:
+    examples_path = Path(__file__).parent
+    with (examples_path / 'onetag_testfield.json').open(mode='r') as f:
         field = load_field(f)
 
     estimator = CameraLocalizer(
