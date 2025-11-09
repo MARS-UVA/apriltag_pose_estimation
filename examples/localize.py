@@ -2,7 +2,7 @@ from pathlib import Path
 
 import cv2
 
-from apriltag_pose_estimation.core.camera import FACETIME_HD_CAMERA_PARAMETERS
+from apriltag_pose_estimation.core.camera import GALAXY_S24_PLUS_MAIN_CAM_PARAMETERS 
 from apriltag_pose_estimation.localization import CameraLocalizer, load_field
 from apriltag_pose_estimation.localization.strategies import MultiTagPnPStrategy, \
     LowestAmbiguityStrategy
@@ -10,20 +10,20 @@ from apriltag_pose_estimation.localization.strategies import MultiTagPnPStrategy
 
 def main() -> None:
     examples_path = Path(__file__).parent
-    with (examples_path / 'onetag_testfield.json').open(mode='r') as f:
+    with (examples_path / 'mars_testfield.json').open(mode='r') as f:
         field = load_field(f)
 
     estimator = CameraLocalizer(
         strategy=MultiTagPnPStrategy(fallback_strategy=LowestAmbiguityStrategy()),
         field=field,
-        camera_params=FACETIME_HD_CAMERA_PARAMETERS,
+        camera_params=GALAXY_S24_PLUS_MAIN_CAM_PARAMETERS ,
         nthreads=2,
         quad_sigma=0,
         refine_edges=True,
         decode_sharpening=0.25,
     )
 
-    video_capture = cv2.VideoCapture(0)
+    video_capture = cv2.VideoCapture(1)
 
     cv2.namedWindow('camera')
 

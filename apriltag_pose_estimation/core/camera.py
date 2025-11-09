@@ -17,7 +17,8 @@ __all__ = ['CameraParameters',
            'DEPSTECH_CAM_PARAMETERS',
            'LOGITECH_CAM_PARAMETERS',
            'IPHONE_13_MINI_MAIN_CAM_PARAMETERS',
-           'ARDUCAM_OV9281_PARAMETERS']
+           'ARDUCAM_OV9281_PARAMETERS',
+           'GALAXY_S24_PLUS_MAIN_CAM_PARAMETERS']
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -169,3 +170,14 @@ FACETIME_HD_CAMERA_PARAMETERS = CameraParameters(fx=954.0874994019651,
                                                  p1=-0.000045055253893522236,
                                                  p2=-0.007745497656725853,
                                                  k3=0.11519181871308336)
+
+GALAXY_S24_PLUS_MAIN_CAM_PARAMETERS = CameraParameters(fx=1577.6710882155696,
+                                                      fy=1578.1918913274176,
+                                                      cx=536.7027520891314,
+                                                      cy=980.2679188012452,
+                                                      k1=-0.0645156141142605,
+                                                      k2=0.14588713723707655,
+                                                      p1=0.003958174370212018,
+                                                      p2=0.00012977471972707647,
+                                                      k3=-0.1784624986145353)
+"""Camera parameters for the Samsung Galaxy S24 Plus main camera."""
