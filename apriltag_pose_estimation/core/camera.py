@@ -149,15 +149,7 @@ IPHONE_13_MINI_MAIN_CAM_PARAMETERS = CameraParameters(fx=975.0944324169702,
                                                       k3=1.326544376051906)
 """Camera parameters for the iPhone 13 mini's main back camera."""
 
-ARDUCAM_OV9281_PARAMETERS = CameraParameters(fx=917.8689314756377,
-                                             fy=915.8489820426906,
-                                             cx=622.0291414400201,
-                                             cy=403.406506417902,
-                                             k1=0.035177356816538566,
-                                             k2=0.06561968267066408,
-                                             p1=0.0003549920677931665,
-                                             p2=-0.004943481865784456,
-                                             k3=-0.16330153714848702)
+ARDUCAM_OV9281_PARAMETERS = CameraParameters(fx=921.4459062879504, fy=920.5545512136466, cx=640.4116071984264, cy=389.86971089068913, k1=0.07166453170075777, k2=-0.11227733992947839, p1=-0.0014616393622597851, p2=-0.0014945237103234227, k3=0.04562948613626775)
 """Camera parameters for the ArduCam OV9281 camera module."""
 
 
