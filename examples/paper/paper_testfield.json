@@ -1,0 +1,162 @@
+{
+    "fiducials": [
+        {
+            "id": 0,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "id": 4,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0,
+                0.0578,
+                0
+            ]
+        },
+        {
+            "id": 8,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0,
+                0.1156,
+                0
+            ]
+        },
+        {
+            "id": 1,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.0578,
+                0,
+                0
+            ]
+        },
+        {
+            "id": 5,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.0578,
+                0.0578,
+                0
+            ]
+        },
+        {
+            "id": 9,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.0578,
+                0.1156,
+                0
+            ]
+        },
+        {
+            "id": 2,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.1156,
+                0,
+                0
+            ]
+        },
+        {
+            "id": 6,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.1156,
+                0.0578,
+                0
+            ]
+        },
+        {
+            "id": 10,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.1156,
+                0.1156,
+                0
+            ]
+        },
+        {
+            "id": 3,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.1734,
+                0,
+                0
+            ]
+        },
+                {
+            "id": 7,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.1734,
+                0.0578,
+                0
+            ]
+        },
+                {
+            "id": 11,
+            "rotation_vector": [
+                0,
+                0,
+                -0.785398163397
+            ],
+            "translation_vector": [
+                0.1734,
+                0.1156,
+                0
+            ]
+        }
+    ],
+    "tag_size": 0.024,
+    "tag_family": "tagStandard41h12"
+}
