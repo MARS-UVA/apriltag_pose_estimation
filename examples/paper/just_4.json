@@ -1,0 +1,19 @@
+{
+    "fiducials": [
+        {
+            "id": 4,
+            "rotation_vector": [
+                0,
+                0,
+                -1.57079632679
+            ],
+            "translation_vector": [
+                0,
+                0.0575,
+                0
+            ]
+        }
+    ],
+    "tag_size": 0.024,
+    "tag_family": "tagStandard41h12"
+}
