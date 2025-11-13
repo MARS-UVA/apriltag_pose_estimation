@@ -16,6 +16,12 @@ setup(
         'scipy'
     ],
     extras_require={
+        'render3d': [
+            'meshio',
+            'pyvista',
+            'pyvistaqt',
+            'PyQt5'
+        ],
         'generate': [
             'Pillow',
             'fpdf2'
