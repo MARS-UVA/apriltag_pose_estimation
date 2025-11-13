@@ -253,6 +253,16 @@ class AprilTagFamily:
         """The number of codes in this family."""
         return self.__ptr.contents.ncodes
 
+    @property
+    def width_at_border(self) -> int:
+        """The width of the tag only within the borders defined by its corners."""
+        return self.__ptr.contents.width_at_border
+
+    @property
+    def total_width(self) -> int:
+        """The total width of the tag, including data past the borders."""
+        return self.__ptr.contents.total_width
+
     def __del__(self):
         destroy_func = self.__libc[f'{self.__family_name}_destroy']
         destroy_func(self.__ptr)

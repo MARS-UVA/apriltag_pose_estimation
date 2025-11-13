@@ -347,7 +347,7 @@ class AprilTagDetector:
                         tag_pose = None
 
                     results.append(AprilTagDetection(
-                        tag_family=ctypes.string_at(detection.family.contents.name).decode(),
+                        tag_family=ctypes.string_at(detection.family_name.contents.name).decode(),
                         tag_id=detection.id,
                         hamming=detection.hamming,
                         decision_margin=detection.decision_margin,

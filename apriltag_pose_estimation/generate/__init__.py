@@ -4,7 +4,7 @@ This package is an executable package for generating printable AprilTags at spec
 The package also exposes the primary function for generating PDFs.
 """
 
-from .core import *
+from .tagset import *
 
 __all__ = [
     'generate_apriltag_pdf'

@@ -1,33 +1,37 @@
 """Provides a class which generates images of AprilTags."""
 
 import ctypes
-import os
-from collections.abc import Sequence
 
+import PIL
 import cv2
 import numpy as np
 import numpy.typing as npt
+from PIL.Image import Image
 
-from ...core.bindings import AprilTagFamilyId, AprilTagLibrary, _image_u8_get_array, image_u8
+from ...core.bindings import AprilTagFamilyId, AprilTagLibrary, _image_u8_get_array, image_u8, AprilTagFamily
 
 
 class AprilTagImageGenerator:
     """A class which generates images of AprilTags."""
 
-    def __init__(self, family: AprilTagFamilyId):
+    def __init__(self, family_name: AprilTagFamilyId):
         """
-        :param family: The name of the AprilTag family for which images will be generated.
+        :param family_name: The name of the AprilTag family for which images will be generated.
         """
         self.__library = AprilTagLibrary.load()
-        self.__family = self.__library.get_family(family)
-        self.__family_name = family
+        self.__family = self.__library.get_family(family_name)
+        self.__family_name = family_name
 
     @property
-    def family(self) -> AprilTagFamilyId:
+    def family(self) -> AprilTagFamily:
+        return self.__family
+
+    @property
+    def family_name(self) -> AprilTagFamilyId:
         """The family for which images will be generated."""
         return self.__family_name
 
-    def generate_image(self, tag_id: int, tag_size: int | None = None) -> npt.NDArray[np.uint8]:
+    def generate_image(self, tag_id: int, tag_size: int | None = None) -> Image:
         """
         Generate an image for the AprilTag with the given ID in this family at the given size.
         :param tag_id: ID of the AprilTag to generate.
@@ -47,4 +51,4 @@ class AprilTagImageGenerator:
         img = img[:, :img.shape[0]]
         if tag_size is not None:
             img = cv2.resize(img, (tag_size, tag_size), interpolation=cv2.INTER_NEAREST_EXACT)
-        return img
+        return PIL.Image.fromarray(img)
