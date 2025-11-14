@@ -4,13 +4,12 @@ Defines a Qt application for displaying the pose of the camera relative to a fie
 Requires installing ``apriltag_pose_estimation`` with the "render3d" extra.
 """
 
-import os
-from collections.abc import Sequence
 from importlib.resources import files
 from typing import Optional
 
+import numpy as np
+
 from ...apriltag.render.image import AprilTagImageGenerator
-from ...core.bindings import default_search_paths
 
 try:
     from PyQt5 import Qt
@@ -45,7 +44,6 @@ class CameraPoseDisplay:
     """
     def __init__(self,
                  field: AprilTagField,
-                 search_paths: Sequence[str | os.PathLike] = default_search_paths,
                  **kwargs):
         """
         :param field: The field of AprilTags.
@@ -53,9 +51,9 @@ class CameraPoseDisplay:
         :param kwargs: Keyword arguments to pass to the underlying plotter (see :class:`BackgroundPlotter`).
         """
         self.__plotter = BackgroundPlotter(**kwargs)
-        apriltag_image_generator = AprilTagImageGenerator(field.tag_family, search_paths=search_paths)
+        apriltag_image_generator = AprilTagImageGenerator(field.tag_family)
         for tag_id, tag_pose in field.items():
-            texture = (pv.numpy_to_texture(apriltag_image_generator.generate_image(tag_id))
+            texture = (pv.numpy_to_texture(np.asarray(apriltag_image_generator.generate_image(tag_id)))
                        .flip_x()
                        .flip_y())
             plane_scale_factor = PLANE_SCALE_FACTORS.get(field.tag_family,
